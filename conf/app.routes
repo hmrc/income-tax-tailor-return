@@ -1,6 +1,6 @@
 # microservice specific routes
 
-
+GET		/tailoringData/:taxYear/:nino                                   controllers.TailoringController.getAll(nino: String, taxYear: Int)
 GET		/tailoringData/:taxYear/:nino/about-you                         controllers.TailoringController.getAboutYou(nino: String, taxYear: Int)
 GET 	/tailoringData/:taxYear/:nino/work-benefits                     controllers.TailoringController.getWorkBenefit(nino: String, taxYear: Int)
 GET 	/tailoringData/:taxYear/:nino/rentals-pensions-investments      controllers.TailoringController.getRentalsPensionsInvestments(nino: String, taxYear: Int)

@@ -34,6 +34,13 @@ class TailoringController @Inject()(authorisedAction: AuthorisedAction,
                                     cc: ControllerComponents)
                                    (implicit ec: ExecutionContext) extends BackendController(cc) with Logging {
 
+  def getAll(nino: String, taxYear: Int): Action[AnyContent] = authorisedAction.async { _ =>
+    tailoringService.getTailoringData(nino, taxYear).map {
+      case Right(data) => Ok(Json.toJson(data.tailoring))
+      case Left(DataNotFoundError) => NotFound
+      case Left(_) => InternalServerError
+    }
+  }
   def getAboutYou(nino: String, taxYear: Int): Action[AnyContent] = authorisedAction.async { _ =>
     tailoringService.getTailoringData(nino, taxYear).map {
       case Right(data) => Ok(Json.toJson(data.tailoring.aboutYou))
