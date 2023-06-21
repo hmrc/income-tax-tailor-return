@@ -14,17 +14,8 @@
  * limitations under the License.
  */
 
-package config
+package controllers
 
-import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
-
-import javax.inject.{Inject, Singleton}
-import scala.concurrent.duration.Duration
-
-@Singleton
-class AppConfig @Inject()(config: ServicesConfig) {
-  lazy val useEncryption: Boolean = config.getBoolean("mongodb.useEncryption")
-  lazy val encryptionKey: String = config.getString("mongodb.encryption.key")
-  def mongoTTL: Long = Duration(config.getString("mongodb.timeToLive")).toDays.toInt
+class AboutYouControllerSpec {
 
 }

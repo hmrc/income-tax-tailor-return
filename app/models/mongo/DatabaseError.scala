@@ -14,16 +14,18 @@
  * limitations under the License.
  */
 
-package support.builders
+package models.mongo
 
-import models.User
+trait DatabaseError {
+  val message: String
+}
 
-object UserBuilder {
-
-  val aUser: User = User(
-    mtditid = "1234567890",
-    arn = None
-  )
-
-  val anAgentUser: User = aUser.copy(arn = Some("0987654321"))
+case object DataNotUpdated extends DatabaseError {
+  override val message: String = "User data was not updated due to mongo exception"
+}
+case object DataNotFound extends DatabaseError {
+  override val message: String = "User data could not be found due to mongo exception"
+}
+case class EncryptionDecryptionError(error: String) extends DatabaseError {
+  override val message: String = s"Encryption / Decryption exception occurred. Exception: $error"
 }
