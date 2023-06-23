@@ -14,29 +14,23 @@
  * limitations under the License.
  */
 
-package services
+package support.mocks
 
 import models.errors.ServiceError
-import models.mongo.TailoringUserData
+import org.scalamock.handlers.CallHandler2
+import org.scalamock.scalatest.MockFactory
 import repositories.TailoringUserDataRepository
 
-import javax.inject.{Inject, Singleton}
 import scala.concurrent.Future
 
-@Singleton
-class TailoringService @Inject()(
-                                   tailoringRepository: TailoringUserDataRepository
-                                ) {
+trait MockTailoringUserDataRepository extends MockFactory {
 
-  def getTailoringData(nino: String, taxYear: Int): Future[Either[ServiceError, TailoringUserData]] = {
-    tailoringRepository.find(nino, taxYear)
-  }
+  protected val mockTailoringUserDataRepository: TailoringUserDataRepository = mock[TailoringUserDataRepository]
 
-  def updateCreateTailoringData(tailoringData: TailoringUserData): Future[Either[ServiceError, Boolean]] = {
-    tailoringRepository.createOrUpdate(tailoringData)
-  }
-
-  def removeTailoringData(nino: String, taxYear: Int) : Future[Either[ServiceError, Boolean]] = {
-    tailoringRepository.clear(nino, taxYear)
+  def mockClear(nino: String, taxYear: Int,
+                result: Either[ServiceError, Boolean]): CallHandler2[String, Int, Future[Either[ServiceError, Boolean]]] = {
+    (mockTailoringUserDataRepository.clear(_: String, _: Int))
+      .expects(nino, taxYear)
+      .returning(Future.successful(result))
   }
 }

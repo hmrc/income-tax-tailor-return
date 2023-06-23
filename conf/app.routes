@@ -15,3 +15,5 @@ POST	/tailoringData/:taxYear/:nino/rentals-pensions-investments      controllers
 POST	/tailoringData/:taxYear/:nino/capital-gains-trusts-estates      controllers.TailoringController.postGainsTrustsEstates(nino: String, taxYear: Int)
 POST	/tailoringData/:taxYear/:nino/pensions-payments                 controllers.TailoringController.postPensionsPayments(nino: String, taxYear: Int)
 POST	/tailoringData/:taxYear/:nino/allowances-tax-relief             controllers.TailoringController.postAllowancesTaxRelief(nino: String, taxYear: Int)
+
+DELETE  /tailoringData/:taxYear/:nino                                   controllers.TailoringController.removeTailoringData(nino: String, taxYear: Int)

@@ -30,6 +30,9 @@ trait Repository {
     equal("nino", toBson(nino))
   )
 
+  def sessionIdFilter(sessionId: String): Bson = and(
+    equal("sessionId", toBson(sessionId))
+  )
 
   def handleEncryptionDecryptionException[T](exception: Exception, startOfMessage: String): Left[ServiceError, T] = {
     pagerDutyLog(ENCRYPTION_DECRYPTION_ERROR, s"$startOfMessage ${exception.getMessage}")

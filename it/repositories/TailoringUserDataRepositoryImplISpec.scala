@@ -20,16 +20,11 @@ import models.errors.{DataNotFoundError, EncryptionDecryptionError}
 import models.mongo.{EncryptedTailoringUserData, TailoringUserData}
 import org.joda.time.{DateTime, DateTimeZone}
 import org.mongodb.scala.MongoWriteException
-import org.mongodb.scala.model.Indexes.ascending
-import org.mongodb.scala.model.{IndexModel, IndexOptions}
 import org.scalatest.matchers.must.Matchers.convertToAnyMustWrapper
 import play.api.inject.guice.GuiceApplicationBuilder
 import support.IntegrationTest
 import support.builders.mongo.TailoringModels.aTailoringDataModel
-import uk.gov.hmrc.mongo.MongoUtils
 import utils.AesGcmAdCrypto
-
-import scala.concurrent.Future
 
 class TailoringUserDataRepositoryImplISpec extends IntegrationTest {
 
@@ -38,7 +33,7 @@ class TailoringUserDataRepositoryImplISpec extends IntegrationTest {
   private val nino = "AA123456A"
 
   private val repoWithInvalidEncryption = GuiceApplicationBuilder()
-    .configure(config + ("mongodb.encryption.key" -> "key", "mongodb.useEncryption" -> true)).build()
+    .configure(config + ("mongodb.encryption.key" -> "key")).build()
     .injector.instanceOf[TailoringUserDataRepositoryImpl]
 
   private val underTest: TailoringUserDataRepositoryImpl = app.injector.instanceOf[TailoringUserDataRepositoryImpl]
@@ -129,6 +124,17 @@ class TailoringUserDataRepositoryImplISpec extends IntegrationTest {
 
     "return DataNotFoundError when find operation did not find data for the given inputs" in new EmptyDatabase {
       await(underTest.find(nino, taxYear)) shouldBe Left(DataNotFoundError)
+    }
+  }
+
+  "clear" should {
+    "remove a record" in new EmptyDatabase {
+      await(underTest.collection.countDocuments().toFuture()) mustBe 0
+      await(underTest.createOrUpdate(testData))
+      await(underTest.collection.countDocuments().toFuture()) shouldBe 1
+
+      await(underTest.clear(testData.nino, testData.taxYear)) mustBe Right(true)
+      await(underTest.collection.countDocuments().toFuture()) mustBe 0
     }
   }
 

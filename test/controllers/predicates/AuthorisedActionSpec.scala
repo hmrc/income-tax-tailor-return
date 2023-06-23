@@ -21,7 +21,7 @@ import models.User
 import org.scalatest.matchers.must.Matchers.convertToAnyMustWrapper
 import play.api.http.Status._
 import play.api.mvc.Results._
-import play.api.mvc.{AnyContent, Result}
+import play.api.mvc.{AnyContent, AnyContentAsEmpty, Result}
 import play.api.test.FakeRequest
 import support.UnitTest
 import uk.gov.hmrc.auth.core._
@@ -36,6 +36,7 @@ import scala.concurrent.{ExecutionContext, Future}
 class AuthorisedActionSpec extends UnitTest {
 
   val auth: AuthorisedAction = authorisedAction
+  private val fakeRequest: FakeRequest[AnyContentAsEmpty.type] = FakeRequest().withHeaders("mtditid" -> "1234567890")
 
   ".enrolmentGetIdentifierValue" should {
 

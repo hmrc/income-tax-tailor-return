@@ -180,4 +180,12 @@ class TailoringController @Inject()(authorisedAction: AuthorisedAction,
     }
   }
 
+  def removeTailoringData(nino: String, taxYear: Int): Action[AnyContent] = authorisedAction.async { _ =>
+    tailoringService.removeTailoringData(nino, taxYear).map {
+      case Left(DataNotFoundError) => NotFound
+      case Left(_) => InternalServerError
+      case Right(_) => NoContent
+    }
+  }
+
 }
