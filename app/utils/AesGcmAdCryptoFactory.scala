@@ -14,16 +14,17 @@
  * limitations under the License.
  */
 
-package support.builders
+package utils
 
-import models.User
+import config.AppConfig
+import uk.gov.hmrc.crypto.{AdDecrypter, AdEncrypter, SymmetricCryptoFactory}
 
-object UserBuilder {
+import javax.inject.{Inject, Singleton}
 
-  val aUser: User = User(
-    mtditid = "1234567890",
-    arn = None
-  )
+@Singleton
+class AesGcmAdCryptoFactory @Inject()(appConfig: AppConfig) {
 
-  val anAgentUser: User = aUser.copy(arn = Some("0987654321"))
+  private lazy val aesGcmAdCrypto = SymmetricCryptoFactory.aesGcmAdCrypto(appConfig.encryptionKey)
+
+  def instance(): AdEncrypter with AdDecrypter = aesGcmAdCrypto
 }
