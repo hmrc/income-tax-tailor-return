@@ -23,5 +23,7 @@ import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 class AppConfigStub extends MockFactory {
 
   def config(environment: String = "test", encrypt: Boolean = true): AppConfig = new AppConfig(mock[ServicesConfig]) {
+    override lazy val encryptionKey: String = "encryptionKey12345"
+    override lazy val useEncryption: Boolean = encrypt
   }
 }

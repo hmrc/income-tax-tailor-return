@@ -14,17 +14,12 @@
  * limitations under the License.
  */
 
-package config
+package models.mongo
 
-import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
+trait DatabaseError {
+  val message: String
+}
 
-import javax.inject.{Inject, Singleton}
-import scala.concurrent.duration.Duration
-
-@Singleton
-class AppConfig @Inject()(config: ServicesConfig) {
-  lazy val useEncryption: Boolean = config.getBoolean("mongodb.useEncryption")
-  lazy val encryptionKey: String = config.getString("mongodb.encryption.key")
-  def mongoTTL: Long = Duration(config.getString("mongodb.timeToLive")).toDays.toInt
-
+case class EncryptionDecryptionError(error: String) extends DatabaseError {
+  override val message: String = s"Encryption / Decryption exception occurred. Exception: $error"
 }

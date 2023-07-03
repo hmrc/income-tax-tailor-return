@@ -39,6 +39,7 @@ trait IntegrationTest extends AnyWordSpec
   protected implicit lazy val appConfig: AppConfig = app.injector.instanceOf[AppConfig]
 
   protected val config: Map[String, String] = Map(
+    "mongodb.useEncryption" -> "true",
   )
 
   override implicit lazy val app: Application = new GuiceApplicationBuilder()

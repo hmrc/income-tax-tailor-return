@@ -14,17 +14,25 @@
  * limitations under the License.
  */
 
-package config
+package services
 
-import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
+import models.errors.ServiceError
+import models.mongo.TailoringUserData
+import repositories.TailoringUserDataRepository
 
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.duration.Duration
+import scala.concurrent.Future
 
 @Singleton
-class AppConfig @Inject()(config: ServicesConfig) {
-  lazy val useEncryption: Boolean = config.getBoolean("mongodb.useEncryption")
-  lazy val encryptionKey: String = config.getString("mongodb.encryption.key")
-  def mongoTTL: Long = Duration(config.getString("mongodb.timeToLive")).toDays.toInt
+class TailoringService @Inject()(
+                                   tailoringRepository: TailoringUserDataRepository
+                                ) {
 
+  def getTailoringData(nino: String, taxYear: Int): Future[Either[ServiceError, TailoringUserData]] = {
+    tailoringRepository.find(nino, taxYear)
+  }
+
+  def updateCreateTailoringData(tailoringData: TailoringUserData): Future[Either[ServiceError, Boolean]] = {
+    tailoringRepository.createOrUpdate(tailoringData)
+  }
 }

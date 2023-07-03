@@ -14,17 +14,16 @@
  * limitations under the License.
  */
 
-package config
+package common
 
-import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
+object EnrolmentKeys {
+  val Individual = "HMRC-MTD-IT"
+  val Agent = "HMRC-AS-AGENT"
+  val nino = "HMRC-NI"
+}
 
-import javax.inject.{Inject, Singleton}
-import scala.concurrent.duration.Duration
-
-@Singleton
-class AppConfig @Inject()(config: ServicesConfig) {
-  lazy val useEncryption: Boolean = config.getBoolean("mongodb.useEncryption")
-  lazy val encryptionKey: String = config.getString("mongodb.encryption.key")
-  def mongoTTL: Long = Duration(config.getString("mongodb.timeToLive")).toDays.toInt
-
+object EnrolmentIdentifiers {
+  val individualId = "MTDITID"
+  val agentReference = "AgentReferenceNumber"
+  val nino = "NINO"
 }
