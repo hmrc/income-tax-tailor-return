@@ -16,7 +16,6 @@
 
 package controllers
 
-
 import models.errors.{ApiServiceError, DataNotFoundError}
 import models.mongo.TailoringUserData
 import models.tailoring.TailoringDataModel
@@ -29,7 +28,7 @@ import support.mocks.MockTailoringService
 
 import scala.concurrent.Future
 
-class AboutYouControllerSpec extends ControllerUnitTest
+class TailoringDataControllerSpec extends ControllerUnitTest
   with MockTailoringService {
 
 
@@ -38,23 +37,23 @@ class AboutYouControllerSpec extends ControllerUnitTest
   val nino = "A123459A"
   val taxYear = 2023
 
-  ".getAboutYou" should {
+  ".getTailoringData" should {
     "return Ok with Data" in {
 
       mockAuth()
       mockGetAllTailoringData(nino, taxYear, Right(TailoringUserData(
         nino, taxYear, tailoring = TailoringDataModel(Some(aAboutYou)))))
 
-      val result = underTest.getAboutYou(nino, taxYear)(fakeGetRequest)
+      val result = underTest.getTailoringData(nino, taxYear)(fakeGetRequest)
 
       status(result) shouldBe OK
-      bodyOf(result) shouldBe Json.toJson(aAboutYou).toString()
+      bodyOf(result) shouldBe Json.toJson(TailoringDataModel(Some(aAboutYou))).toString()
     }
     "return Not Found" in {
       mockAuth()
       mockGetAllTailoringData(nino, taxYear, Left(DataNotFoundError))
 
-      val result = underTest.getAboutYou(nino, taxYear)(fakeGetRequest)
+      val result = underTest.getTailoringData(nino, taxYear)(fakeGetRequest)
 
       status(result) shouldBe NOT_FOUND
     }
@@ -62,36 +61,36 @@ class AboutYouControllerSpec extends ControllerUnitTest
       mockAuth()
       mockGetAllTailoringData(nino, taxYear, Left(ApiServiceError("failed")))
 
-      val result = underTest.getAboutYou(nino, taxYear)(fakeGetRequest)
+      val result = underTest.getTailoringData(nino, taxYear)(fakeGetRequest)
 
       status(result) shouldBe INTERNAL_SERVER_ERROR
     }
   }
-  ".postAboutYou" should {
+  ".postTailoringData" should {
     "return CREATED with prior Data" in {
 
-      val tailoringModel = aAboutYou
+      val tailoringModel = TailoringDataModel(Some(aAboutYou))
       val request = fakePostRequest.withJsonBody(Json.toJson(tailoringModel))
 
       mockAuth()
       mockGetAllTailoringData(nino, taxYear, Right(TailoringUserData(
         nino, taxYear, tailoring = TailoringDataModel(Some(aAboutYou)))))
-      mockCreate(TailoringUserData(nino, taxYear, TailoringDataModel(Some(tailoringModel))), Right(true))
+      mockCreate(TailoringUserData(nino, taxYear, tailoringModel), Right(true))
 
-      val result = underTest.postAboutYou(nino, taxYear)(request)
+      val result = underTest.postTailoringData(nino, taxYear)(request)
 
       status(result) shouldBe CREATED
     }
     "return CREATED when there is no priorData" in {
 
-      val tailoringModel = aAboutYou
+      val tailoringModel = TailoringDataModel(Some(aAboutYou))
       val request = fakePostRequest.withJsonBody(Json.toJson(tailoringModel))
 
       mockAuth()
       mockGetAllTailoringData(nino, taxYear, Left(DataNotFoundError))
-      mockCreate(TailoringUserData(nino, taxYear, TailoringDataModel(Some(tailoringModel))), Right(true))
+      mockCreate(TailoringUserData(nino, taxYear, tailoringModel), Right(true))
 
-      val result = underTest.postAboutYou(nino, taxYear)(request)
+      val result = underTest.postTailoringData(nino, taxYear)(request)
 
       status(result) shouldBe CREATED
     }
@@ -101,7 +100,7 @@ class AboutYouControllerSpec extends ControllerUnitTest
 
       mockAuth()
 
-      val result = underTest.postAboutYou(nino, taxYear)(request)
+      val result = underTest.postTailoringData(nino, taxYear)(request)
 
       status(result) shouldBe BAD_REQUEST
     }
@@ -111,20 +110,20 @@ class AboutYouControllerSpec extends ControllerUnitTest
 
       mockAuth()
 
-      val result = underTest.postAboutYou(nino, taxYear)(request)
+      val result = underTest.postTailoringData(nino, taxYear)(request)
 
       status(result) shouldBe BAD_REQUEST
     }
     "return INTERNAL_SERVER_ERROR when get priorData fails" in {
 
-      val tailoringModel = aAboutYou
+      val tailoringModel = TailoringDataModel(Some(aAboutYou))
       val request = fakePostRequest.withJsonBody(Json.toJson(tailoringModel))
 
       mockAuth()
       mockGetAllTailoringData(nino, taxYear, Left(ApiServiceError("failed")))
 
 
-      val result: Future[Result] = underTest.postAboutYou(nino, taxYear)(request)
+      val result: Future[Result] = underTest.postTailoringData(nino, taxYear)(request)
 
       status(result) shouldBe INTERNAL_SERVER_ERROR
     }

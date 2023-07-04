@@ -34,6 +34,13 @@ class TailoringController @Inject()(authorisedAction: AuthorisedAction,
                                     cc: ControllerComponents)
                                    (implicit ec: ExecutionContext) extends BackendController(cc) with Logging {
 
+  def getTailoringData(nino: String, taxYear: Int): Action[AnyContent] = authorisedAction.async { _ =>
+    tailoringService.getTailoringData(nino, taxYear).map {
+      case Right(data) => Ok(Json.toJson(data.tailoring))
+      case Left(DataNotFoundError) => NotFound
+      case Left(_) => InternalServerError
+    }
+  }
   def getAboutYou(nino: String, taxYear: Int): Action[AnyContent] = authorisedAction.async { _ =>
     tailoringService.getTailoringData(nino, taxYear).map {
       case Right(data) => Ok(Json.toJson(data.tailoring.aboutYou))
@@ -74,6 +81,20 @@ class TailoringController @Inject()(authorisedAction: AuthorisedAction,
       case Right(data) => Ok(Json.toJson(data.tailoring.allowancesTaxRelief))
       case Left(DataNotFoundError) => NotFound
       case Left(_) => InternalServerError
+    }
+  }
+  def postTailoringData(nino: String, taxYear: Int): Action[AnyContent] = authorisedAction.async { implicit request =>
+    val userData = request.request.body.asJson.map(_.validate[TailoringDataModel]) match {
+      case Some(JsSuccess(model, _)) if isCaseClassNotEmpty(model)  =>
+        Right(TailoringUserData(nino, taxYear, tailoring = model))
+      case _ =>
+        logger.warn("[TailoringController][postTailoringData] Json invalid")
+        Left(false)
+    }
+    userData match {
+      case Left(_) => Future.successful(BadRequest)
+      case Right(submittedData) =>
+        handleCreateUpdate(submittedData)
     }
   }
   def postAboutYou(nino: String, taxYear: Int): Action[AnyContent] = authorisedAction.async { implicit request =>
@@ -176,6 +197,14 @@ class TailoringController @Inject()(authorisedAction: AuthorisedAction,
       case Left(_) =>
         logger.warn("[TailoringController][handleCreateUpdate] Failed Create/Update TailoringData")
         InternalServerError
+    }
+  }
+
+  def removeTailoringData(nino: String, taxYear: Int): Action[AnyContent] = authorisedAction.async { _ =>
+    tailoringService.removeTailoringData(nino, taxYear).map {
+      case Left(DataNotFoundError) => NotFound
+      case Left(_) => InternalServerError
+      case Right(_) => NoContent
     }
   }
 

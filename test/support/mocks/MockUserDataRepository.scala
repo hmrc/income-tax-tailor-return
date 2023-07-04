@@ -23,7 +23,6 @@ import org.scalamock.handlers.{CallHandler1, CallHandler2}
 import org.scalamock.scalatest.MockFactory
 import repositories.TailoringUserDataRepository
 
-import java.util.UUID
 import scala.concurrent.Future
 
 trait MockUserDataRepository extends MockFactory {
@@ -48,6 +47,13 @@ trait MockUserDataRepository extends MockFactory {
                taxYear: Int,
                result: Either[ServiceError, TailoringUserData]): CallHandler2[String, Int, Future[Either[ServiceError, TailoringUserData]]] = {
     (mockUserDataRepository.find(_: String, _: Int))
+      .expects(nino, taxYear)
+      .returning(Future.successful(result))
+  }
+
+  def mockClear(nino: String, taxYear: Int,
+                result: Either[ServiceError, Boolean]): CallHandler2[String, Int, Future[Either[ServiceError, Boolean]]] = {
+    (mockUserDataRepository.clear(_: String, _: Int))
       .expects(nino, taxYear)
       .returning(Future.successful(result))
   }

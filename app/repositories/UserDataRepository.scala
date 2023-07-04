@@ -22,6 +22,7 @@ import com.mongodb.client.model.Updates.set
 import config.AppConfig
 import models.errors.{DataNotFoundError, DataNotUpdatedError, MongoError, ServiceError}
 import models.mongo._
+import org.mongodb.scala.MongoException
 import org.joda.time.{DateTime, DateTimeZone}
 import org.mongodb.scala.bson.conversions.Bson
 import org.mongodb.scala.model.{FindOneAndReplaceOptions, FindOneAndUpdateOptions}
@@ -31,7 +32,7 @@ import uk.gov.hmrc.mongo.play.json.Codecs.toBson
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 import utils.AesGcmAdCrypto
 import utils.PagerDutyHelper.PagerDutyKeys._
-import utils.PagerDutyHelper.pagerDutyLog
+import utils.PagerDutyHelper.{PagerDutyKeys, pagerDutyLog}
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
@@ -113,6 +114,32 @@ class TailoringUserDataRepositoryImpl @Inject()(mongo: MongoComponent, appConfig
     }
   }
 
+  override def clear(nino: String, taxYear: Int): Future[Either[ServiceError, Boolean]] = {
+    val eventualResponse = collection.deleteMany(filter(nino, taxYear))
+      .toFutureOption()
+      .recover(mongoRecover("Clear", FAILED_TO_CLEAR_TAILORING_DATA))
+      .map(_.exists(_.wasAcknowledged()))
+
+    eventualResponse.map {
+      case false => Left(MongoError("FAILED_TO_CLEAR_TAILORING_DATA"))
+      case true => Right(true)
+    }
+  }
+
+  def mongoRecover[T](operation: String,
+                      pagerDutyKey: PagerDutyKeys.Value): PartialFunction[Throwable, Option[T]] = new PartialFunction[Throwable, Option[T]] {
+
+    override def isDefinedAt(x: Throwable): Boolean = x.isInstanceOf[MongoException]
+
+    override def apply(e: Throwable): Option[T] = {
+      pagerDutyLog(
+        pagerDutyKey,
+        s"[UserDataRepository][$operation] Failed to clear tailoring data. Error:${e.getMessage}."
+      )
+      None
+    }
+  }
+
 }
 
 @ImplementedBy(classOf[TailoringUserDataRepositoryImpl])
@@ -120,5 +147,7 @@ trait TailoringUserDataRepository {
   def createOrUpdate(userData: TailoringUserData): Future[Either[ServiceError, Boolean]]
 
   def find(nino: String, taxYear: Int): Future[Either[ServiceError, TailoringUserData]]
+
+  def clear(nino: String, taxYear: Int): Future[Either[ServiceError, Boolean]]
 
 }

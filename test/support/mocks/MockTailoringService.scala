@@ -54,5 +54,13 @@ trait MockTailoringService extends MockFactory with Matchers {
       .returning(Future.successful(result))
   }
 
+  def mockRemoveTailoringData(nino: String,
+                              taxYear: Int,
+                              result: Either[ServiceError, Boolean]): CallHandler2[String, Int, Future[Either[ServiceError, Boolean]]] = {
+    (mockTailoringService.removeTailoringData(_: String, _: Int))
+      .expects(nino, taxYear)
+      .returning(Future.successful(result))
+  }
+
 
 }

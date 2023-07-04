@@ -19,15 +19,13 @@ package repositories
 import models.errors.{DataNotFoundError, EncryptionDecryptionError}
 import models.mongo.{EncryptedTailoringUserData, TailoringUserData}
 import org.joda.time.{DateTime, DateTimeZone}
-import org.mongodb.scala.MongoWriteException
-import org.mongodb.scala.model.Indexes.ascending
-import org.mongodb.scala.model.{IndexModel, IndexOptions}
+import org.mongodb.scala.{MongoException, MongoInternalException, MongoTimeoutException, MongoWriteException}
 import org.scalatest.matchers.must.Matchers.convertToAnyMustWrapper
 import play.api.inject.guice.GuiceApplicationBuilder
 import support.IntegrationTest
 import support.builders.mongo.TailoringModels.aTailoringDataModel
-import uk.gov.hmrc.mongo.MongoUtils
 import utils.AesGcmAdCrypto
+import utils.PagerDutyHelper.PagerDutyKeys.FAILED_TO_CREATE_UPDATE_TAILORING_DATA
 
 import scala.concurrent.Future
 
@@ -129,6 +127,39 @@ class TailoringUserDataRepositoryImplISpec extends IntegrationTest {
 
     "return DataNotFoundError when find operation did not find data for the given inputs" in new EmptyDatabase {
       await(underTest.find(nino, taxYear)) shouldBe Left(DataNotFoundError)
+    }
+  }
+
+  "mongoRecover" should {
+    Seq(new MongoTimeoutException(""), new MongoInternalException(""), new MongoException("")).foreach { exception =>
+      s"recover when the exception is a MongoException or a subclass of MongoException - ${exception.getClass.getSimpleName}" in {
+        val result = Future.failed(exception)
+          .recover(underTest.mongoRecover[Int]("CreateOrUpdate", FAILED_TO_CREATE_UPDATE_TAILORING_DATA))
+
+        await(result) mustBe None
+      }
+    }
+
+    Seq(new NullPointerException(""), new RuntimeException("")).foreach { exception =>
+      s"not recover when the exception is not a subclass of MongoException - ${exception.getClass.getSimpleName}" in {
+        val result = Future.failed(exception)
+          .recover(underTest.mongoRecover[Int]("CreateOrUpdate", FAILED_TO_CREATE_UPDATE_TAILORING_DATA))
+
+        assertThrows[RuntimeException] {
+          await(result)
+        }
+      }
+    }
+  }
+
+  "clear" should {
+    "remove a record" in new EmptyDatabase {
+      await(underTest.collection.countDocuments().toFuture()) mustBe 0
+      await(underTest.createOrUpdate(testData))
+      await(underTest.collection.countDocuments().toFuture()) shouldBe 1
+
+      await(underTest.clear(testData.nino, testData.taxYear)) mustBe Right(true)
+      await(underTest.collection.countDocuments().toFuture()) mustBe 0
     }
   }
 
