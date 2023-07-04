@@ -16,13 +16,11 @@
 
 package services
 
-import models.errors.{DataNotFoundError, DataNotUpdatedError}
+import models.errors._
 import models.mongo.TailoringUserData
 import support.ControllerUnitTest
 import support.builders.mongo.TailoringModels.aTailoringDataModel
 import support.mocks.MockUserDataRepository
-
-import scala.concurrent.Future
 
 class TailoringServiceSpec extends ControllerUnitTest with MockUserDataRepository{
 
@@ -67,6 +65,22 @@ class TailoringServiceSpec extends ControllerUnitTest with MockUserDataRepositor
       val result = await(underTest.updateCreateTailoringData(TailoringUserData(nino, taxYear, aTailoringDataModel)))
       result shouldBe Left(DataNotUpdatedError)
     }
+  }
+
+  ".removeTailoringData(...) " should {
+
+    "return error when tailoringUserDataRepository.clear(...) fails" in {
+      mockClear(nino, taxYear, result = Left(MongoError("some-error")))
+
+      await(underTest.removeTailoringData(nino, taxYear)) shouldBe Left(MongoError("some-error"))
+    }
+
+    "return success when tailoringUserDataRepository.clear(...) succeeded" in {
+      mockClear(nino, taxYear, result = Right(true))
+
+      await(underTest.removeTailoringData(nino, taxYear)) shouldBe Right(true)
+    }
+
   }
 
 }

@@ -35,4 +35,8 @@ class TailoringService @Inject()(
   def updateCreateTailoringData(tailoringData: TailoringUserData): Future[Either[ServiceError, Boolean]] = {
     tailoringRepository.createOrUpdate(tailoringData)
   }
+
+  def removeTailoringData(nino: String, taxYear: Int): Future[Either[ServiceError, Boolean]] = {
+    tailoringRepository.clear(nino, taxYear)
+  }
 }

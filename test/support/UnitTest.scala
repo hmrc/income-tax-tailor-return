@@ -30,11 +30,11 @@ import play.api.mvc.{AnyContentAsEmpty, ControllerComponents, DefaultActionBuild
 import play.api.test.{DefaultAwaitTimeout, FakeRequest, Helpers}
 import services.AuthService
 import support.providers.AppConfigStubProvider
+import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.auth.core.retrieve.Retrieval
 import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals
 import uk.gov.hmrc.auth.core.syntax.retrieved.authSyntaxForRetrieved
-import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.duration.Duration
