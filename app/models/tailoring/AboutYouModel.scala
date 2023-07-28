@@ -24,6 +24,7 @@ import utils.CypherSyntax.{DecryptableOps, EncryptableOps}
 case class AboutYouModel(
                           ukResidentBetweenTaxYear: Option[Boolean] = None,
                           wasDomicile: Option[Boolean] = None,
+                          dualResident: Option[Boolean] = None,
                           donationsUsingGiftAid: Option[Boolean] = None,
                           giftsSharesSecurities: Option[Boolean] = None,
                           giftsLandProperty: Option[Boolean] = None,
@@ -31,6 +32,7 @@ case class AboutYouModel(
                           childBenefit: Option[Boolean] = None,
                           wasIncomeOverAmount: Option[Boolean] = None,
                           hasHigherIncomeThanPartner: Option[Boolean] = None,
+                          hasNoPartner: Option[Boolean] = None,
                           fosterOrSharedLifeCarer: Option[Boolean] = None,
                           patentRoyaltyPayments: Option[Boolean] = None,
                           taxAvoidance: Option[Boolean] = None,
@@ -40,6 +42,7 @@ case class AboutYouModel(
     EncryptedAboutYouModel(
       ukResidentBetweenTaxYear = ukResidentBetweenTaxYear.map(_.encrypted),
       wasDomicile = wasDomicile.map(_.encrypted),
+      dualResident = dualResident.map(_.encrypted),
       donationsUsingGiftAid = donationsUsingGiftAid.map(_.encrypted),
       giftsSharesSecurities = giftsSharesSecurities.map(_.encrypted),
       giftsLandProperty = giftsLandProperty.map(_.encrypted),
@@ -47,6 +50,7 @@ case class AboutYouModel(
       childBenefit = childBenefit.map(_.encrypted),
       wasIncomeOverAmount = wasIncomeOverAmount.map(_.encrypted),
       hasHigherIncomeThanPartner = hasHigherIncomeThanPartner.map(_.encrypted),
+      hasNoPartner = hasNoPartner.map(_.encrypted),
       fosterOrSharedLifeCarer = fosterOrSharedLifeCarer.map(_.encrypted),
       patentRoyaltyPayments = patentRoyaltyPayments.map(_.encrypted),
       taxAvoidance = taxAvoidance.map(_.encrypted),
@@ -61,6 +65,7 @@ object AboutYouModel {
 case class EncryptedAboutYouModel(
                                    ukResidentBetweenTaxYear: Option[EncryptedValue] = None,
                                    wasDomicile: Option[EncryptedValue] = None,
+                                   dualResident: Option[EncryptedValue] = None,
                                    donationsUsingGiftAid: Option[EncryptedValue] = None,
                                    giftsSharesSecurities: Option[EncryptedValue] = None,
                                    giftsLandProperty: Option[EncryptedValue] = None,
@@ -68,6 +73,7 @@ case class EncryptedAboutYouModel(
                                    childBenefit: Option[EncryptedValue] = None,
                                    wasIncomeOverAmount: Option[EncryptedValue] = None,
                                    hasHigherIncomeThanPartner: Option[EncryptedValue] = None,
+                                   hasNoPartner: Option[EncryptedValue] = None,
                                    fosterOrSharedLifeCarer: Option[EncryptedValue] = None,
                                    patentRoyaltyPayments: Option[EncryptedValue] = None,
                                    taxAvoidance: Option[EncryptedValue] = None,
@@ -77,6 +83,7 @@ case class EncryptedAboutYouModel(
     AboutYouModel(
       ukResidentBetweenTaxYear = ukResidentBetweenTaxYear.map(_.decrypted[Boolean]),
       wasDomicile = wasDomicile.map(_.decrypted[Boolean]),
+      dualResident = dualResident.map(_.decrypted[Boolean]),
       donationsUsingGiftAid = donationsUsingGiftAid.map(_.decrypted[Boolean]),
       giftsSharesSecurities = giftsSharesSecurities.map(_.decrypted[Boolean]),
       giftsLandProperty = giftsLandProperty.map(_.decrypted[Boolean]),
@@ -84,6 +91,7 @@ case class EncryptedAboutYouModel(
       childBenefit = childBenefit.map(_.decrypted[Boolean]),
       wasIncomeOverAmount = wasIncomeOverAmount.map(_.decrypted[Boolean]),
       hasHigherIncomeThanPartner = hasHigherIncomeThanPartner.map(_.decrypted[Boolean]),
+      hasNoPartner = hasNoPartner.map(_.decrypted[Boolean]),
       fosterOrSharedLifeCarer = fosterOrSharedLifeCarer.map(_.decrypted[Boolean]),
       patentRoyaltyPayments = patentRoyaltyPayments.map(_.decrypted[Boolean]),
       taxAvoidance = taxAvoidance.map(_.decrypted[Boolean]),
