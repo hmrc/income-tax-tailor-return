@@ -26,6 +26,7 @@ import utils.CypherSyntax.{DecryptableOps, EncryptableOps}
 
 case class WorkBenefitsModel(
                               employed: Option[Boolean] = None,
+                              selfEmployed:  Option[Boolean] = None,
                               partnership: Option[Boolean] = None,
                               lloydUnderwriter: Option[Boolean] = None,
                               ministerOfReligion: Option[Boolean] = None,
@@ -36,12 +37,14 @@ case class WorkBenefitsModel(
                               jobseekersAllowance: Option[Boolean] = None,
                               employmentSupportAllowance: Option[Boolean] = None,
                               taxableStateBenefit: Option[Boolean] = None,
+                              statutoryBenefit: Option[Boolean] = None,
                               taxRefundOrOffset: Option[Boolean] = None
 
                             ) {
   def encrypted(implicit aesGcmAdCrypto: AesGcmAdCrypto, associatedText: String): EncryptedWorkBenefitsModel =
     EncryptedWorkBenefitsModel(
       employed = employed.map(_.encrypted),
+      selfEmployed = selfEmployed.map(_.encrypted),
       partnership = partnership.map(_.encrypted),
       lloydUnderwriter = lloydUnderwriter.map(_.encrypted),
       ministerOfReligion = ministerOfReligion.map(_.encrypted),
@@ -49,9 +52,10 @@ case class WorkBenefitsModel(
       lumpSums = lumpSums.map(_.encrypted),
       untaxedIncomeFromShareSchemes = untaxedIncomeFromShareSchemes.map(_.encrypted),
       haveCisDeductions = haveCisDeductions.map(_.encrypted),
-      JobseekersAllowance = jobseekersAllowance.map(_.encrypted),
-      EmploymentSupportAllowance = employmentSupportAllowance.map(_.encrypted),
+      jobseekersAllowance = jobseekersAllowance.map(_.encrypted),
+      employmentSupportAllowance = employmentSupportAllowance.map(_.encrypted),
       taxableStateBenefit = taxableStateBenefit.map(_.encrypted),
+      statutoryBenefit = statutoryBenefit.map(_.encrypted),
       taxRefundOrOffset = taxRefundOrOffset.map(_.encrypted)
     )
 }
@@ -61,6 +65,7 @@ object WorkBenefitsModel {
 }
 case class EncryptedWorkBenefitsModel(
                               employed: Option[EncryptedValue] = None,
+                              selfEmployed: Option[EncryptedValue] = None,
                               partnership: Option[EncryptedValue] = None,
                               lloydUnderwriter: Option[EncryptedValue] = None,
                               ministerOfReligion: Option[EncryptedValue] = None,
@@ -68,15 +73,17 @@ case class EncryptedWorkBenefitsModel(
                               lumpSums: Option[EncryptedValue] = None,
                               untaxedIncomeFromShareSchemes: Option[EncryptedValue] = None,
                               haveCisDeductions: Option[EncryptedValue] = None,
-                              JobseekersAllowance: Option[EncryptedValue] = None,
-                              EmploymentSupportAllowance: Option[EncryptedValue] = None,
+                              jobseekersAllowance: Option[EncryptedValue] = None,
+                              employmentSupportAllowance: Option[EncryptedValue] = None,
                               taxableStateBenefit: Option[EncryptedValue] = None,
+                              statutoryBenefit: Option[EncryptedValue] = None,
                               taxRefundOrOffset: Option[EncryptedValue] = None
 
                             ) {
   def decrypted(implicit aesGcmAdCrypto: AesGcmAdCrypto, associatedText: String): WorkBenefitsModel =
     WorkBenefitsModel(
       employed = employed.map(_.decrypted[Boolean]),
+      selfEmployed = selfEmployed.map(_.decrypted[Boolean]),
       partnership = partnership.map(_.decrypted[Boolean]),
       lloydUnderwriter = lloydUnderwriter.map(_.decrypted[Boolean]),
       ministerOfReligion = ministerOfReligion.map(_.decrypted[Boolean]),
@@ -84,9 +91,10 @@ case class EncryptedWorkBenefitsModel(
       lumpSums = lumpSums.map(_.decrypted[Boolean]),
       untaxedIncomeFromShareSchemes = untaxedIncomeFromShareSchemes.map(_.decrypted[Boolean]),
       haveCisDeductions = haveCisDeductions.map(_.decrypted[Boolean]),
-      jobseekersAllowance = JobseekersAllowance.map(_.decrypted[Boolean]),
-      employmentSupportAllowance = EmploymentSupportAllowance.map(_.decrypted[Boolean]),
+      jobseekersAllowance = jobseekersAllowance.map(_.decrypted[Boolean]),
+      employmentSupportAllowance = employmentSupportAllowance.map(_.decrypted[Boolean]),
       taxableStateBenefit = taxableStateBenefit.map(_.decrypted[Boolean]),
+      statutoryBenefit = statutoryBenefit.map(_.decrypted[Boolean]),
       taxRefundOrOffset = taxRefundOrOffset.map(_.decrypted[Boolean])
     )
 }
