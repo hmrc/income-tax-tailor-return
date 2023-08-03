@@ -22,8 +22,8 @@ object TailoringModels {
   val aAboutYou: AboutYouModel = AboutYouModel(
     Some(true),Some(true),Some(true),Some(true),Some(true),Some(true),Some(true),Some(true),Some(true),Some(true),Some(true),Some(true), Some(true))
 
-  val aWorkBenefitModel: WorkBenefitsModel = WorkBenefitsModel(Some(true),Some(true),Some(true),Some(true),Some(true),Some(true),Some(true),Some(true)
-    ,Some(true),Some(true),Some(true),Some(true))
+  val aWorkBenefitModel: WorkBenefitsModel = WorkBenefitsModel(Some(true),Some(true),Some(true),Some(true),Some(true),Some(true),Some(true),Some(true),Some(true)
+    ,Some(true),Some(true),Some(true),Some(true),Some(true))
 
   val aGainsTrustsEstatesModel: GainsTrustsEstatesModel = GainsTrustsEstatesModel(Some(true),Some(true),Some(true),Some(true))
 
