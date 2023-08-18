@@ -22,4 +22,5 @@ import support.stubs.AppConfigStub
 trait AppConfigStubProvider {
 
   lazy val appConfigStub: AppConfig = new AppConfigStub().config()
+
 }

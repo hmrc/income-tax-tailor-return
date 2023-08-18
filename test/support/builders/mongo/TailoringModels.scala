@@ -20,21 +20,25 @@ import models.tailoring._
 
 object TailoringModels {
   val aAboutYou: AboutYouModel = AboutYouModel(
-    Some(true),Some(true),Some(true),Some(true),Some(true),Some(true),Some(true),Some(true),Some(true),Some(true),Some(true),Some(true), Some(true))
+    Some(true), Some(true), Some(true), Some(true), Some(true), Some(true), Some(true), Some(true),
+    Some(true), Some(true), Some(true), Some(true), Some(true), Some(true), Some(true)
+  )
 
-  val aWorkBenefitModel: WorkBenefitsModel = WorkBenefitsModel(Some(true),Some(true),Some(true),Some(true),Some(true),Some(true),Some(true),Some(true),Some(true)
-    ,Some(true),Some(true),Some(true),Some(true),Some(true))
+  val aWorkBenefitModel: WorkBenefitsModel = WorkBenefitsModel(
+    Some(true), Some(true), Some(true), Some(true), Some(true), Some(true), Some(true),
+    Some(true), Some(true), Some(true), Some(true), Some(true), Some(true), Some(true)
+  )
 
-  val aGainsTrustsEstatesModel: GainsTrustsEstatesModel = GainsTrustsEstatesModel(Some(true),Some(true),Some(true),Some(true))
+  val aGainsTrustsEstatesModel: GainsTrustsEstatesModel = GainsTrustsEstatesModel(Some(true), Some(true), Some(true), Some(true))
 
   val aRentalsPensionsInvestmentsModel: RentalsPensionsInvestmentsModel =
-    RentalsPensionsInvestmentsModel(Some(PropertyModel(Some(true),Some(true))),Some(true),Some(true),Some(true),Some(true),Some(true), Some(true)
-      ,Some(true),Some(true),Some(true),Some(true) ,Some(true),Some(true),Some(true),Some(true),Some(true),Some(true),Some(true),Some(true),Some(true),Some(true),Some(true))
+    RentalsPensionsInvestmentsModel(Some(PropertyModel(Some(true), Some(true))), Some(true), Some(true), Some(true), Some(true), Some(true), Some(true)
+      , Some(true), Some(true), Some(true), Some(true), Some(true), Some(true), Some(true), Some(true), Some(true), Some(true), Some(true), Some(true), Some(true), Some(true), Some(true))
 
-  val aPensionsPaymentsModel: PensionsPaymentsModel = PensionsPaymentsModel(Some(true),Some(true),Some(true))
+  val aPensionsPaymentsModel: PensionsPaymentsModel = PensionsPaymentsModel(Some(true), Some(true), Some(true))
 
-  val aAllowancesTaxReliefModel : AllowancesTaxReliefModel = AllowancesTaxReliefModel(Some(true),Some(true),Some(true),Some(true),Some(true),Some(true),
-    Some(true),Some(true),Some(true),Some(true),Some(true),Some(true))
+  val aAllowancesTaxReliefModel: AllowancesTaxReliefModel = AllowancesTaxReliefModel(Some(true), Some(true), Some(true), Some(true), Some(true), Some(true),
+    Some(true), Some(true), Some(true), Some(true), Some(true), Some(true))
 
   val aTailoringDataModel: TailoringDataModel =
     TailoringDataModel(Some(aAboutYou), Some(aWorkBenefitModel), Some(aRentalsPensionsInvestmentsModel),

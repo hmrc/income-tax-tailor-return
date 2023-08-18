@@ -14,19 +14,16 @@
  * limitations under the License.
  */
 
-package support.stubs
+package models.employment
 
-import config.AppConfig
-import org.scalamock.scalatest.MockFactory
-import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
+import play.api.libs.json.{Json, OFormat}
 
-class AppConfigStub extends MockFactory {
+case class EmploymentFinancialData(employmentData: Option[EmploymentData],
+                                   employmentBenefits: Option[EmploymentBenefits]) {
 
-  def config(environment: String = "test", encrypt: Boolean = true): AppConfig = new AppConfig(mock[ServicesConfig]) {
-    override lazy val encryptionKey: String = "encryptionKey12345"
-    override lazy val useEncryption: Boolean = encrypt
+  lazy val hasOccPen: Boolean = employmentData.exists(_.hasOccPen)
+}
 
-    override lazy val employmentBaseUrl: String = "http://localhost:11111"
-
-  }
+object EmploymentFinancialData {
+  implicit val format: OFormat[EmploymentFinancialData] = Json.format[EmploymentFinancialData]
 }
