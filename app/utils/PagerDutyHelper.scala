@@ -17,6 +17,7 @@
 package utils
 
 import play.api.Logger
+import uk.gov.hmrc.http.HttpResponse
 
 object PagerDutyHelper {
 
@@ -28,10 +29,23 @@ object PagerDutyHelper {
     val FAILED_TO_FIND_TAILORING_DATA: PagerDutyKeys.Value = Value
     val FAILED_TO_CLEAR_TAILORING_DATA: PagerDutyKeys.Value = Value
     val ENCRYPTION_DECRYPTION_ERROR: PagerDutyKeys.Value = Value
+
+    val BAD_SUCCESS_JSON_FROM_API: PagerDutyKeys.Value = Value
+    val FOURXX_RESPONSE_FROM_API: PagerDutyKeys.Value = Value
+    val SERVICE_UNAVAILABLE_FROM_API: PagerDutyKeys.Value = Value
+    val INTERNAL_SERVER_ERROR_FROM_API: PagerDutyKeys.Value = Value
+    val UNEXPECTED_RESPONSE_FROM_API: PagerDutyKeys.Value = Value
   }
 
   def pagerDutyLog(pagerDutyKey: PagerDutyKeys.Value, otherDetail: String): Unit = {
     val messageToLog = s"$pagerDutyKey $otherDetail"
     logger.error(messageToLog)
+  }
+
+  def getCorrelationId(response: HttpResponse): String = {
+    response.header("CorrelationId") match {
+      case Some(id) => s" CorrelationId: $id"
+      case _ => ""
+    }
   }
 }
