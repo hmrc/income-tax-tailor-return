@@ -65,18 +65,18 @@ case class RentalsPensionsInvestmentsModel(
                                             lifeAnnuity: Option[Boolean] = None,
                                             capitalRedemption: Option[Boolean] = None,
                                             voidedIsa: Option[Boolean] = None,
-                                            InterestFromUkBanksSocieties: Option[Boolean] = None,
-                                            InterestFromUkTrustFundBonds: Option[Boolean] = None,
-                                            InterestFromGiltEdgedAccruedSecurities: Option[Boolean] = None,
+                                            interestFromUkBanksSocieties: Option[Boolean] = None,
+                                            interestFromUkTrustFundBonds: Option[Boolean] = None,
+                                            interestFromGiltEdgedAccruedSecurities: Option[Boolean] = None,
                                             ukDividendsStocksShares: Option[Boolean] = None,
                                             ukStockDividends: Option[Boolean] = None,
                                             dividendsUnitTrustsInvestment: Option[Boolean] = None,
                                             freeRedeemableShares: Option[Boolean] = None,
                                             closeCompanyLoans: Option[Boolean] = None,
                                             nonUkInterest: Option[Boolean] = None,
-                                            NonUkDividendsInUk: Option[Boolean] = None,
-                                            NonUkDividendsAbroad: Option[Boolean] = None,
-                                            NonUkInsurancePolicies: Option[Boolean] = None
+                                            nonUkDividendsInUk: Option[Boolean] = None,
+                                            nonUkDividendsAbroad: Option[Boolean] = None,
+                                            nonUkInsurancePolicies: Option[Boolean] = None
                                           ) {
 
   def encrypted(implicit aesGcmAdCrypto: AesGcmAdCrypto, associatedText: String): EncryptedRentalsPensionsInvestmentsModel =
@@ -91,18 +91,17 @@ case class RentalsPensionsInvestmentsModel(
       lifeAnnuity = lifeAnnuity.map(_.encrypted),
       capitalRedemption = capitalRedemption.map(_.encrypted),
       voidedIsa = voidedIsa.map(_.encrypted),
-      InterestFromUkBanksSocieties = InterestFromUkBanksSocieties.map(_.encrypted),
-      InterestFromUkTrustFundBonds = InterestFromUkTrustFundBonds.map(_.encrypted),
-      InterestFromGiltEdgedAccruedSecurities = InterestFromGiltEdgedAccruedSecurities.map(_.encrypted),
+      interestFromUkBanksSocieties = interestFromUkBanksSocieties.map(_.encrypted),
+      interestFromUkTrustFundBonds = interestFromUkTrustFundBonds.map(_.encrypted),
+      interestFromGiltEdgedAccruedSecurities = interestFromGiltEdgedAccruedSecurities.map(_.encrypted),
       ukDividendsStocksShares = ukDividendsStocksShares.map(_.encrypted),
       ukStockDividends = ukStockDividends.map(_.encrypted),
       dividendsUnitTrustsInvestment = dividendsUnitTrustsInvestment.map(_.encrypted),
       freeRedeemableShares = freeRedeemableShares.map(_.encrypted),
       closeCompanyLoans = closeCompanyLoans.map(_.encrypted),
       nonUkInterest = nonUkInterest.map(_.encrypted),
-      NonUkDividendsInUk = NonUkDividendsInUk.map(_.encrypted),
-      NonUkDividendsAbroad = NonUkDividendsAbroad.map(_.encrypted),
-      NonUkInsurancePolicies = NonUkInsurancePolicies.map(_.encrypted)
+      nonUkDividendsInUk = nonUkDividendsInUk.map(_.encrypted), nonUkDividendsAbroad = nonUkDividendsAbroad.map(_.encrypted),
+      nonUkInsurancePolicies = nonUkInsurancePolicies.map(_.encrypted)
     )
 }
 
@@ -121,18 +120,18 @@ case class EncryptedRentalsPensionsInvestmentsModel(
                                             lifeAnnuity: Option[EncryptedValue] = None,
                                             capitalRedemption: Option[EncryptedValue] = None,
                                             voidedIsa: Option[EncryptedValue] = None,
-                                            InterestFromUkBanksSocieties: Option[EncryptedValue] = None,
-                                            InterestFromUkTrustFundBonds: Option[EncryptedValue] = None,
-                                            InterestFromGiltEdgedAccruedSecurities: Option[EncryptedValue] = None,
+                                            interestFromUkBanksSocieties: Option[EncryptedValue] = None,
+                                            interestFromUkTrustFundBonds: Option[EncryptedValue] = None,
+                                            interestFromGiltEdgedAccruedSecurities: Option[EncryptedValue] = None,
                                             ukDividendsStocksShares: Option[EncryptedValue] = None,
                                             ukStockDividends: Option[EncryptedValue] = None,
                                             dividendsUnitTrustsInvestment: Option[EncryptedValue] = None,
                                             freeRedeemableShares: Option[EncryptedValue] = None,
                                             closeCompanyLoans: Option[EncryptedValue] = None,
                                             nonUkInterest: Option[EncryptedValue] = None,
-                                            NonUkDividendsInUk: Option[EncryptedValue] = None,
-                                            NonUkDividendsAbroad: Option[EncryptedValue] = None,
-                                            NonUkInsurancePolicies: Option[EncryptedValue] = None
+                                            nonUkDividendsInUk: Option[EncryptedValue] = None,
+                                            nonUkDividendsAbroad: Option[EncryptedValue] = None,
+                                            nonUkInsurancePolicies: Option[EncryptedValue] = None
                                           ) {
   def decrypted(implicit aesGcmAdCrypto: AesGcmAdCrypto, associatedText: String): RentalsPensionsInvestmentsModel =
     RentalsPensionsInvestmentsModel(
@@ -146,18 +145,18 @@ case class EncryptedRentalsPensionsInvestmentsModel(
       lifeAnnuity = lifeAnnuity.map(_.decrypted[Boolean]),
       capitalRedemption = capitalRedemption.map(_.decrypted[Boolean]),
       voidedIsa = voidedIsa.map(_.decrypted[Boolean]),
-      InterestFromUkBanksSocieties = InterestFromUkBanksSocieties.map(_.decrypted[Boolean]),
-      InterestFromUkTrustFundBonds = InterestFromUkTrustFundBonds.map(_.decrypted[Boolean]),
-      InterestFromGiltEdgedAccruedSecurities = InterestFromGiltEdgedAccruedSecurities.map(_.decrypted[Boolean]),
+      interestFromUkBanksSocieties = interestFromUkBanksSocieties.map(_.decrypted[Boolean]),
+      interestFromUkTrustFundBonds = interestFromUkTrustFundBonds.map(_.decrypted[Boolean]),
+      interestFromGiltEdgedAccruedSecurities = interestFromGiltEdgedAccruedSecurities.map(_.decrypted[Boolean]),
       ukDividendsStocksShares = ukDividendsStocksShares.map(_.decrypted[Boolean]),
       ukStockDividends = ukStockDividends.map(_.decrypted[Boolean]),
       dividendsUnitTrustsInvestment = dividendsUnitTrustsInvestment.map(_.decrypted[Boolean]),
       freeRedeemableShares = freeRedeemableShares.map(_.decrypted[Boolean]),
       closeCompanyLoans = closeCompanyLoans.map(_.decrypted[Boolean]),
       nonUkInterest = nonUkInterest.map(_.decrypted[Boolean]),
-      NonUkDividendsInUk = NonUkDividendsInUk.map(_.decrypted[Boolean]),
-      NonUkDividendsAbroad = NonUkDividendsAbroad.map(_.decrypted[Boolean]),
-      NonUkInsurancePolicies = NonUkInsurancePolicies.map(_.decrypted[Boolean])
+      nonUkDividendsInUk = nonUkDividendsInUk.map(_.decrypted[Boolean]),
+      nonUkDividendsAbroad = nonUkDividendsAbroad.map(_.decrypted[Boolean]),
+      nonUkInsurancePolicies = nonUkInsurancePolicies.map(_.decrypted[Boolean])
     )
 }
 
