@@ -14,17 +14,23 @@
  * limitations under the License.
  */
 
-package utils
+package models
 
-import config.AppConfig
-import uk.gov.hmrc.crypto.{AdDecrypter, AdEncrypter, SymmetricCryptoFactory}
+import play.api.mvc.PathBindable
 
-import javax.inject.{Inject, Singleton}
+object TaxYearPathBindable {
 
-@Singleton
-class AesGcmAdCryptoFactory @Inject()(appConfig: AppConfig) {
+  implicit def pathBindable: PathBindable[TaxYear] = new PathBindable[TaxYear] {
 
-  private lazy val aesGcmAdCrypto = SymmetricCryptoFactory.aesGcmAdCrypto(appConfig.encryptionKey)
+    override def bind(key: String, value: String): Either[String, TaxYear] =
+      value match {
+        case result if result.matches("^20\\d{2}$") => Right(TaxYear(taxYear = result.toInt))
+        case _ => Left("Invalid taxYear")
+      }
 
-  def instance(): AdEncrypter with AdDecrypter = aesGcmAdCrypto
+    override def unbind(key: String, value: TaxYear): String =
+      value.taxYear.toString
+  }
+  case class TaxYear(taxYear: Int)
 }
+

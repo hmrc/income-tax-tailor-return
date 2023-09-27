@@ -14,19 +14,12 @@
  * limitations under the License.
  */
 
-package support.stubs
+package models
 
-import config.AppConfig
-import org.scalamock.scalatest.MockFactory
-import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
+abstract class Enrolment(val key: String, val value: String)
 
-class AppConfigStub extends MockFactory {
+object Enrolment {
+  case object MtdIncomeTax extends Enrolment(key = "HMRC-MTD-IT", value = "MTDITID")
 
-  def config(environment: String = "test", encrypt: Boolean = true): AppConfig = new AppConfig(mock[ServicesConfig]) {
-    override lazy val encryptionKey: String = "encryptionKey12345"
-    override lazy val useEncryption: Boolean = encrypt
-
-    override lazy val employmentBaseUrl: String = "http://localhost:11111"
-
-  }
+  case object Agent extends Enrolment(key = "HMRC-AS-AGENT", value = "AgentReferenceNumber")
 }

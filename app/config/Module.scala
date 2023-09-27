@@ -16,15 +16,22 @@
 
 package config
 
-import com.google.inject.AbstractModule
-import repositories.{TailoringUserDataRepository, TailoringUserDataRepositoryImpl}
+import controllers.predicates.{AuthorisedAction, IdentifierAction}
+import play.api.{Configuration, Environment}
+import play.api.inject.Binding
+import uk.gov.hmrc.crypto.{Decrypter, Encrypter}
 
-class Module extends AbstractModule {
+import java.time.Clock
 
-  override def configure(): Unit = {
 
-    bind(classOf[AppConfig]).asEagerSingleton()
-    bind(classOf[TailoringUserDataRepository]).to(classOf[TailoringUserDataRepositoryImpl]).asEagerSingleton()
+class Module extends play.api.inject.Module {
 
+  override def bindings(environment: Environment, configuration: Configuration): collection.Seq[Binding[_]]  = {
+    Seq(
+      bind[AppConfig].toSelf.eagerly(),
+      bind[Clock].toInstance(Clock.systemUTC()),
+      bind[IdentifierAction].to[AuthorisedAction],
+      bind[Encrypter with Decrypter].toProvider[CryptoProvider]
+    )
   }
 }

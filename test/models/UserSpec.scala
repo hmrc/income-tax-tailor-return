@@ -16,19 +16,21 @@
 
 package models
 
-import support.UnitTest
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
+import play.api.test.FakeRequest
 
-class UserSpec extends UnitTest {
+class UserSpec extends AnyWordSpec with Matchers{
 
   ".isAgent" should {
     "return true when user arn non empty" in {
-      val underTest = User(mtditid = "any-mtditid", arn = Some("any-arn"))
+      val underTest = User(mtditid = "any-mtditid", arn = Some("any-arn"))(FakeRequest())
 
       underTest.isAgent shouldBe true
     }
 
     "return false when user arn is None" in {
-      val underTest = User(mtditid = "any-mtditid", arn = None)
+      val underTest = User(mtditid = "any-mtditid", arn = None)(FakeRequest())
 
       underTest.isAgent shouldBe false
     }

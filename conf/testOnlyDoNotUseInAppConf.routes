@@ -11,5 +11,3 @@
 
 # Add all the application routes to the prod.routes file
 ->         /                          prod.Routes
-
-DELETE     /test-only/tailoringData/:taxYear/:nino                 controllers.TailoringController.removeTailoringData(nino: String, taxYear: Int)

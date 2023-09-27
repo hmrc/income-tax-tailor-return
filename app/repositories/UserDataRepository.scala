@@ -16,138 +16,90 @@
 
 package repositories
 
-import com.google.inject.ImplementedBy
-import com.mongodb.client.model.ReturnDocument
-import com.mongodb.client.model.Updates.set
 import config.AppConfig
-import models.errors.{DataNotFoundError, DataNotUpdatedError, MongoError, ServiceError}
-import models.mongo._
-import org.mongodb.scala.MongoException
-import org.joda.time.{DateTime, DateTimeZone}
+import models.Done
+import models.mongo.UserData
 import org.mongodb.scala.bson.conversions.Bson
-import org.mongodb.scala.model.{FindOneAndReplaceOptions, FindOneAndUpdateOptions}
-import play.api.Logging
+import org.mongodb.scala.model.Filters.{and, equal}
+import org.mongodb.scala.model._
+import play.api.libs.json.Format
+import uk.gov.hmrc.crypto.{Decrypter, Encrypter}
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.Codecs.toBson
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
-import utils.AesGcmAdCrypto
-import utils.PagerDutyHelper.PagerDutyKeys._
-import utils.PagerDutyHelper.{PagerDutyKeys, pagerDutyLog}
+import uk.gov.hmrc.mongo.play.json.formats.MongoJavatimeFormats
 
+import java.time.{Clock, Instant}
+import java.util.concurrent.TimeUnit
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
-import scala.util.Try
 
 @Singleton
-class TailoringUserDataRepositoryImpl @Inject()(mongo: MongoComponent, appConfig: AppConfig)
-                                                   (implicit aesGcmAdCrypto: AesGcmAdCrypto, ec: ExecutionContext)
-  extends PlayMongoRepository[EncryptedTailoringUserData](
-    mongoComponent = mongo,
-    collectionName = "TailoringUserData",
-    domainFormat = EncryptedTailoringUserData.formats,
-    indexes = RepositoryIndexes.indexes()(appConfig),
-    replaceIndexes = true
-  ) with Repository with TailoringUserDataRepository with Logging {
-
-  private lazy val findMessageStart = "[TailoringUserDataRepositoryRepositoryImpl][find]"
-  private lazy val createOrUpdateMessageStart = "[TailoringUserDataRepositoryRepositoryImpl][create/update]"
-
-  override def createOrUpdate(tailoringUserData: TailoringUserData): Future[Either[ServiceError, Boolean]] = {
-    val userData = tailoringUserData.copy(lastUpdated = DateTime.now(DateTimeZone.UTC))
-
-    encryptedFrom(userData) match {
-      case Left(error: ServiceError) => Future.successful(Left(error))
-      case Right(encryptedData) => createOrUpdateFrom(encryptedData)
-    }
-  }
-
-  override def find(nino: String, taxYear: Int): Future[Either[ServiceError, TailoringUserData]] = {
-    findBy(nino, taxYear).map {
-      case Left(error) => Left(error)
-      case Right(encryptedData) => decryptedFrom(encryptedData)
-    }
-  }
-
-  private def createOrUpdateFrom(encryptedData: EncryptedTailoringUserData): Future[Either[ServiceError, Boolean]] = {
-    val queryFilter: Bson = filter(encryptedData.nino, encryptedData.taxYear)
-    val options = FindOneAndReplaceOptions().upsert(true).returnDocument(ReturnDocument.AFTER)
-    collection.findOneAndReplace(queryFilter, encryptedData, options).toFutureOption().map {
-      case Some(data) => Right(true)
-      case None =>
-        pagerDutyLog(FAILED_TO_CREATE_UPDATE_TAILORING_DATA, s"$createOrUpdateMessageStart Failed to update user data.")
-        Left(DataNotUpdatedError)
-    }.recover {
-      case throwable: Throwable =>
-        pagerDutyLog(FAILED_TO_CREATE_UPDATE_TAILORING_DATA, s"$createOrUpdateMessageStart Failed to update user data. Exception: ${throwable.getMessage}")
-        Left(MongoError(throwable.getMessage))
-    }
-  }
-
-  private def findBy(nino: String, taxYear: Int): Future[Either[ServiceError, EncryptedTailoringUserData]] = {
-    val update = set("lastUpdated", toBson(DateTime.now(DateTimeZone.UTC))(EncryptedTailoringUserData.mongoJodaDateTimeFormats))
-    val options = FindOneAndUpdateOptions().returnDocument(ReturnDocument.AFTER)
-    val eventualResult = collection.findOneAndUpdate(filter(nino, taxYear), update, options).toFutureOption().map {
-      case Some(data) => Right(data)
-      case None => Left(DataNotFoundError)
-    }
-
-    eventualResult.recover {
-      case exception: Exception =>
-        pagerDutyLog(FAILED_TO_FIND_TAILORING_DATA, s"$findMessageStart Failed to find user data. Exception: ${exception.getMessage}")
-        Left(MongoError(exception.getMessage))
-    }
-  }
-
-  private def decryptedFrom(encryptedData: EncryptedTailoringUserData): Either[ServiceError, TailoringUserData] = {
-    implicit lazy val associatedText: String = encryptedData.nino
-    Try(encryptedData.decrypted).toEither match {
-      case Left(throwable: Throwable) => handleEncryptionDecryptionException(throwable.asInstanceOf[Exception], findMessageStart)
-      case Right(decryptedData) => Right(decryptedData)
-    }
-  }
-
-  private def encryptedFrom(userData: TailoringUserData): Either[ServiceError, EncryptedTailoringUserData] = {
-    implicit val associatedText: String = userData.nino
-    Try(userData.encrypted).toEither match {
-      case Left(throwable: Throwable) => handleEncryptionDecryptionException(throwable.asInstanceOf[Exception], createOrUpdateMessageStart)
-      case Right(encryptedData) => Right(encryptedData)
-    }
-  }
-
-  override def clear(nino: String, taxYear: Int): Future[Either[ServiceError, Boolean]] = {
-    val eventualResponse = collection.deleteMany(filter(nino, taxYear))
-      .toFutureOption()
-      .recover(mongoRecover("Clear", FAILED_TO_CLEAR_TAILORING_DATA))
-      .map(_.exists(_.wasAcknowledged()))
-
-    eventualResponse.map {
-      case false => Left(MongoError("FAILED_TO_CLEAR_TAILORING_DATA"))
-      case true => Right(true)
-    }
-  }
-
-  def mongoRecover[T](operation: String,
-                      pagerDutyKey: PagerDutyKeys.Value): PartialFunction[Throwable, Option[T]] = new PartialFunction[Throwable, Option[T]] {
-
-    override def isDefinedAt(x: Throwable): Boolean = x.isInstanceOf[MongoException]
-
-    override def apply(e: Throwable): Option[T] = {
-      pagerDutyLog(
-        pagerDutyKey,
-        s"[UserDataRepository][$operation] Failed to clear tailoring data. Error:${e.getMessage}."
+class UserDataRepository @Inject()(
+                                    mongoComponent: MongoComponent,
+                                    appConfig: AppConfig,
+                                    clock: Clock
+                                  )(implicit ec: ExecutionContext, crypto: Encrypter with Decrypter)
+  extends PlayMongoRepository[UserData](
+    collectionName = "User-Data",
+    mongoComponent = mongoComponent,
+    domainFormat   = UserData.encryptedFormat,
+    indexes        = Seq(
+      IndexModel(
+        Indexes.compoundIndex(Indexes.ascending("mtdItId", "taxYear")),
+        IndexOptions()
+          .name("mtdItId-taxYear-index")
+      ),
+      IndexModel(
+        Indexes.ascending("lastUpdated"),
+        IndexOptions()
+          .name("last-updated-index")
+          .expireAfter(appConfig.mongoTTL, TimeUnit.DAYS)
       )
-      None
+    )
+  ) {
+
+  implicit val instantFormat: Format[Instant] = MongoJavatimeFormats.instantFormat
+
+  private def filterByMtdItIdYear(mtdItId: String, taxYear: Int): Bson = and(
+    equal("mtdItId", toBson(mtdItId)),
+    equal("taxYear", toBson(taxYear))
+  )
+
+  def keepAlive(mtdItId: String, taxYear: Int): Future[Done] =
+    collection
+      .updateOne(
+        filter = filterByMtdItIdYear(mtdItId, taxYear),
+        update = Updates.set("lastUpdated", Instant.now(clock)),
+      )
+      .toFuture()
+      .map(_ => Done)
+
+  def get(mtdItId: String, taxYear: Int): Future[Option[UserData]] =
+    keepAlive(mtdItId, taxYear).flatMap {
+      _ =>
+        collection
+          .find(filterByMtdItIdYear(mtdItId, taxYear))
+          .headOption()
     }
+
+  def set(userData: UserData): Future[Done] = {
+
+    val updatedUserData = userData copy (lastUpdated = Instant.now(clock))
+
+    collection
+      .replaceOne(
+        filter = filterByMtdItIdYear(updatedUserData.mtdItId, updatedUserData.taxYear),
+        replacement = updatedUserData,
+        options = ReplaceOptions().upsert(true)
+      )
+      .toFuture()
+      .map(_ => Done)
   }
 
-}
-
-@ImplementedBy(classOf[TailoringUserDataRepositoryImpl])
-trait TailoringUserDataRepository {
-  def createOrUpdate(userData: TailoringUserData): Future[Either[ServiceError, Boolean]]
-
-  def find(nino: String, taxYear: Int): Future[Either[ServiceError, TailoringUserData]]
-
-  def clear(nino: String, taxYear: Int): Future[Either[ServiceError, Boolean]]
-
+  def clear(mtdItId: String, taxYear: Int): Future[Done] =
+    collection
+      .deleteOne(filterByMtdItIdYear(mtdItId, taxYear))
+      .toFuture()
+      .map(_ => Done)
 }
