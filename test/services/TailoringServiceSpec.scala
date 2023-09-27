@@ -17,7 +17,7 @@
 package services
 
 import models.errors._
-import models.mongo.TailoringUserData
+import models.mongo.AboutYouUserData
 import support.ControllerUnitTest
 import support.builders.mongo.TailoringModels.aTailoringDataModel
 import support.mocks.MockUserDataRepository

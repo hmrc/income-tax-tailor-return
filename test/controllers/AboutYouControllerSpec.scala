@@ -18,7 +18,7 @@ package controllers
 
 
 import models.errors.{ApiServiceError, DataNotFoundError}
-import models.mongo.TailoringUserData
+import models.mongo.AboutYouUserData
 import models.tailoring.TailoringDataModel
 import play.api.http.Status._
 import play.api.libs.json.Json

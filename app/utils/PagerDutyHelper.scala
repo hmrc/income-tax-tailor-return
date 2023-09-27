@@ -26,9 +26,6 @@ object PagerDutyHelper {
   object PagerDutyKeys extends Enumeration {
 
     val FAILED_TO_CREATE_UPDATE_TAILORING_DATA: PagerDutyKeys.Value = Value
-    val FAILED_TO_FIND_TAILORING_DATA: PagerDutyKeys.Value = Value
-    val FAILED_TO_CLEAR_TAILORING_DATA: PagerDutyKeys.Value = Value
-    val ENCRYPTION_DECRYPTION_ERROR: PagerDutyKeys.Value = Value
 
     val BAD_SUCCESS_JSON_FROM_API: PagerDutyKeys.Value = Value
     val FOURXX_RESPONSE_FROM_API: PagerDutyKeys.Value = Value

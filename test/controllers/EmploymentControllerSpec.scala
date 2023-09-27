@@ -18,7 +18,7 @@ package controllers
 
 import models.{APIErrorBodyModel, APIErrorModel}
 import models.errors.{ApiServiceError, DataNotFoundError}
-import models.mongo.TailoringUserData
+import models.mongo.AboutYouUserData
 import models.tailoring.TailoringDataModel
 import org.scalamock.handlers.CallHandler3
 import play.api.http.Status._

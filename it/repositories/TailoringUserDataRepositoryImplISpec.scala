@@ -17,14 +17,13 @@
 package repositories
 
 import models.errors.{DataNotFoundError, EncryptionDecryptionError}
-import models.mongo.{EncryptedTailoringUserData, TailoringUserData}
+import models.mongo.{EncryptedTailoringUserData, AboutYouUserData}
 import org.joda.time.{DateTime, DateTimeZone}
 import org.mongodb.scala.{MongoException, MongoInternalException, MongoTimeoutException, MongoWriteException}
 import org.scalatest.matchers.must.Matchers.convertToAnyMustWrapper
 import play.api.inject.guice.GuiceApplicationBuilder
 import support.IntegrationTest
 import support.builders.mongo.TailoringModels.aTailoringDataModel
-import utils.AesGcmAdCrypto
 import utils.PagerDutyHelper.PagerDutyKeys.FAILED_TO_CREATE_UPDATE_TAILORING_DATA
 
 import scala.concurrent.Future
@@ -47,12 +46,12 @@ class TailoringUserDataRepositoryImplISpec extends IntegrationTest {
     await(underTest.collection.countDocuments().toFuture()) shouldBe 0
   }
 
-  val testData: TailoringUserData = TailoringUserData(nino, taxYear, aTailoringDataModel)
+  val testData: AboutYouUserData = TailoringUserData(nino, taxYear, aTailoringDataModel)
 
   "the set indexes" should {
     "enforce uniqueness" in new EmptyDatabase {
-      private val data_1: TailoringUserData = TailoringUserData(nino, taxYear, aTailoringDataModel)
-      private val data_2: TailoringUserData = TailoringUserData(nino, taxYear, aTailoringDataModel.copy(aboutYou = None))
+      private val data_1: AboutYouUserData = TailoringUserData(nino, taxYear, aTailoringDataModel)
+      private val data_2: AboutYouUserData = TailoringUserData(nino, taxYear, aTailoringDataModel.copy(aboutYou = None))
 
       implicit val associatedText: String = data_1.nino
       await(underTest.createOrUpdate(data_1))

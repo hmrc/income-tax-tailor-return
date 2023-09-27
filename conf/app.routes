@@ -1,22 +1,9 @@
 # microservice specific routes
 
+// taxYear path passable
+GET		/data/:taxYear                                                 controllers.AboutYouUserDataController.get(taxYear: Int)
+POST	/data/:taxYear                                                 controllers.AboutYouUserDataController.set
+DELETE	/data/:taxYear                                                 controllers.AboutYouUserDataController.clear(taxYear: Int)
 
-GET		/tailoringData/:taxYear/:nino                                   controllers.TailoringController.getTailoringData(nino: String, taxYear: Int)
-GET		/tailoringData/:taxYear/:nino/about-you                         controllers.TailoringController.getAboutYou(nino: String, taxYear: Int)
-GET 	/tailoringData/:taxYear/:nino/work-benefits                     controllers.TailoringController.getWorkBenefit(nino: String, taxYear: Int)
-GET 	/tailoringData/:taxYear/:nino/rentals-pensions-investments      controllers.TailoringController.getRentalsPensionsInvestments(nino: String, taxYear: Int)
-GET 	/tailoringData/:taxYear/:nino/capital-gains-trusts-estates      controllers.TailoringController.getGainsTrustsEstates(nino: String, taxYear: Int)
-GET		/tailoringData/:taxYear/:nino/pensions-payments                 controllers.TailoringController.getPensionsPayments(nino: String, taxYear: Int)
-GET		/tailoringData/:taxYear/:nino/allowances-tax-relief             controllers.TailoringController.getAllowancesTaxRelief(nino: String, taxYear: Int)
-
-
-POST	/tailoringData/:taxYear/:nino                                   controllers.TailoringController.postTailoringData(nino: String, taxYear: Int)
-POST	/tailoringData/:taxYear/:nino/about-you                         controllers.TailoringController.postAboutYou(nino: String, taxYear: Int)
-POST	/tailoringData/:taxYear/:nino/work-benefits                     controllers.TailoringController.postWorkBenefit(nino: String, taxYear: Int)
-POST	/tailoringData/:taxYear/:nino/rentals-pensions-investments      controllers.TailoringController.postRentalsPensionsInvestments(nino: String, taxYear: Int)
-POST	/tailoringData/:taxYear/:nino/capital-gains-trusts-estates      controllers.TailoringController.postGainsTrustsEstates(nino: String, taxYear: Int)
-POST	/tailoringData/:taxYear/:nino/pensions-payments                 controllers.TailoringController.postPensionsPayments(nino: String, taxYear: Int)
-POST	/tailoringData/:taxYear/:nino/allowances-tax-relief             controllers.TailoringController.postAllowancesTaxRelief(nino: String, taxYear: Int)
-
-
+// remove
 GET     /employmentData/:taxYear/:nino                                  controllers.EmploymentController.getEmploymentData(nino: String, taxYear: Int)

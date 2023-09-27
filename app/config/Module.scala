@@ -17,14 +17,11 @@
 package config
 
 import com.google.inject.AbstractModule
-import repositories.{TailoringUserDataRepository, TailoringUserDataRepositoryImpl}
 
 class Module extends AbstractModule {
 
   override def configure(): Unit = {
 
     bind(classOf[AppConfig]).asEagerSingleton()
-    bind(classOf[TailoringUserDataRepository]).to(classOf[TailoringUserDataRepositoryImpl]).asEagerSingleton()
-
   }
 }

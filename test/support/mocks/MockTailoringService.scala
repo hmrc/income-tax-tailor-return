@@ -17,12 +17,11 @@
 package support.mocks
 
 import models.errors.ServiceError
-import models.mongo.TailoringUserData
+import models.mongo.AboutYouUserData
 import org.scalamock.function.FunctionAdapter1
 import org.scalamock.handlers._
 import org.scalamock.matchers.Matchers
 import org.scalamock.scalatest.MockFactory
-import services.TailoringService
 
 import scala.concurrent.Future
 
@@ -33,23 +32,23 @@ trait MockTailoringService extends MockFactory with Matchers {
   def mockGetAllTailoringData(
                                nino: String,
                                taxYear: Int,
-                               result: Either[ServiceError, TailoringUserData]
-                             ): CallHandler2[String, Int, Future[Either[ServiceError, TailoringUserData]]] = {
+                               result: Either[ServiceError, AboutYouUserData]
+                             ): CallHandler2[String, Int, Future[Either[ServiceError, AboutYouUserData]]] = {
     (mockTailoringService.getTailoringData(_: String, _: Int))
       .expects(nino, taxYear)
       .returning(Future.successful(result))
   }
 
 
-  def toTolerantMatcher(expected: TailoringUserData): FunctionAdapter1[TailoringUserData, Boolean] =
+  def toTolerantMatcher(expected: AboutYouUserData): FunctionAdapter1[AboutYouUserData, Boolean] =
     where {
-      (actual: TailoringUserData) => expected.nino.equals(actual.nino) && expected.taxYear == actual.taxYear && expected.tailoring == actual.tailoring
+      (actual: AboutYouUserData) => expected.nino.equals(actual.nino) && expected.taxYear == actual.taxYear && expected.tailoring == actual.tailoring
     }
 
 
-  def mockCreate(userData: TailoringUserData,
-                 result: Either[ServiceError, Boolean]): CallHandler1[TailoringUserData, Future[Either[ServiceError, Boolean]]] = {
-    (mockTailoringService.updateCreateTailoringData(_: TailoringUserData))
+  def mockCreate(userData: AboutYouUserData,
+                 result: Either[ServiceError, Boolean]): CallHandler1[AboutYouUserData, Future[Either[ServiceError, Boolean]]] = {
+    (mockTailoringService.updateCreateTailoringData(_: AboutYouUserData))
       .expects(toTolerantMatcher(userData))
       .returning(Future.successful(result))
   }
