@@ -24,64 +24,64 @@ import uk.gov.hmrc.mongo.play.json.formats.MongoJavatimeFormats
 
 import java.time.Instant
 
-case class AboutYouUserData(
-                              nino: String,
+case class UserData(
+                              mtdItId: String,
                               taxYear: Int,
                               data: JsObject,
                               lastUpdated: Instant
                             ) {
 
 }
-  object AboutYouUserData {
+  object UserData {
 
-    val reads: Reads[AboutYouUserData] = {
+    val reads: Reads[UserData] = {
 
       import play.api.libs.functional.syntax._
 
       (
-        (__ \ "nino").read[String] and
+        (__ \ "mtdItId").read[String] and
           (__ \ "taxYear").read[Int] and
           (__ \ "data").read[JsObject] and
           (__ \ "lastUpdated").read[Instant]
-        ) (AboutYouUserData.apply _)
+        ) (UserData.apply _)
     }
 
-    val writes: OWrites[AboutYouUserData] = {
+    val writes: OWrites[UserData] = {
 
       import play.api.libs.functional.syntax._
 
       (
-        (__ \ "nino").write[String] and
+        (__ \ "mtdItId").write[String] and
           (__ \ "taxYear").write[Int] and
           (__ \ "data").write[JsObject] and
           (__ \ "lastUpdated").write[Instant]
-        ) (unlift(AboutYouUserData.unapply))
+        ) (unlift(UserData.unapply))
     }
 
-    implicit val format: OFormat[AboutYouUserData] = OFormat(reads, writes)
+    implicit val format: OFormat[UserData] = OFormat(reads, writes)
 
-    def encryptedFormat(implicit crypto: Encrypter with Decrypter): OFormat[AboutYouUserData] = {
+    def encryptedFormat(implicit crypto: Encrypter with Decrypter): OFormat[UserData] = {
 
       import play.api.libs.functional.syntax._
 
       implicit val sensitiveFormat: Format[SensitiveString] =
         JsonEncryption.sensitiveEncrypterDecrypter(SensitiveString.apply)
 
-      val encryptedReads: Reads[AboutYouUserData] =
+      val encryptedReads: Reads[UserData] =
         (
-          (__ \ "nino").read[String] and
+          (__ \ "mtdItId").read[String] and
             (__ \ "taxYear").read[Int] and
             (__ \ "data").read[SensitiveString] and
             (__ \ "lastUpdated").read(MongoJavatimeFormats.instantFormat)
-          )((nino, taxYear, data, lastUpdated) => AboutYouUserData(nino, taxYear, Json.parse(data.decryptedValue).as[JsObject], lastUpdated))
+          )((mtdItId, taxYear, data, lastUpdated) => UserData(mtdItId, taxYear, Json.parse(data.decryptedValue).as[JsObject], lastUpdated))
 
-      val encryptedWrites: OWrites[AboutYouUserData] =
+      val encryptedWrites: OWrites[UserData] =
         (
-          (__ \ "nino").write[String] and
+          (__ \ "mtdItId").write[String] and
             (__ \ "taxYear").write[Int] and
             (__ \ "data").write[SensitiveString] and
             (__ \ "lastUpdated").write(MongoJavatimeFormats.instantFormat)
-          )(ua => (ua.nino, ua.taxYear, SensitiveString(Json.stringify(ua.data)), ua.lastUpdated))
+          )(ua => (ua.mtdItId, ua.taxYear, SensitiveString(Json.stringify(ua.data)), ua.lastUpdated))
 
       OFormat(encryptedReads orElse reads, encryptedWrites)
     }

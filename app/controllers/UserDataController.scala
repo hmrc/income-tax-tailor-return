@@ -17,27 +17,27 @@
 package controllers
 
 import controllers.predicates.AuthorisedAction
-import models.mongo.AboutYouUserData
+import models.mongo.UserData
 import play.api.libs.json.{JsSuccess, Json}
-import play.api.mvc.{Action, AnyContent, BodyParser, BodyParsers, ControllerComponents, Result}
-import repositories.AboutYouUserDataRepository
+import play.api.mvc.{Action, AnyContent, ControllerComponents}
+import repositories.UserDataRepository
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class AboutYouUserDataController @Inject()(
+class UserDataController @Inject()(
                                     cc: ControllerComponents,
                                     authorisedAction: AuthorisedAction,
-                                    repository: AboutYouUserDataRepository
+                                    repository: UserDataRepository
                                   )(implicit ec: ExecutionContext)
   extends BackendController(cc) {
 
-  def get(nino: String, taxYear: Int): Action[AnyContent] = authorisedAction.async { request =>
+  def get(taxYear: Int): Action[AnyContent] = authorisedAction.async { request =>
     // pull nino from user
       repository
-        .get(nino, taxYear)
+        .get(request.mtditid, taxYear)
         .map {
           _.map(userData => Ok(Json.toJson(userData)))
             .getOrElse(NotFound)
@@ -45,16 +45,16 @@ class AboutYouUserDataController @Inject()(
   }
 
   def set: Action[AnyContent] = authorisedAction.async { request =>
-      request.body.asJson.map(_.validate[AboutYouUserData]) match {
+      request.body.asJson.map(_.validate[UserData]) match {
         case Some(JsSuccess(model, _)) =>
           repository.set(model).map(_ => NoContent)
         case _ => Future.successful(BadRequest)
       }
   }
 
-  def clear(nino: String, taxYear: Int): Action[AnyContent] = authorisedAction.async { request =>
+  def clear(taxYear: Int): Action[AnyContent] = authorisedAction.async { request =>
       repository
-        .clear(nino, taxYear)
+        .clear(request.mtditid, taxYear)
         .map(_ => NoContent)
   }
 }

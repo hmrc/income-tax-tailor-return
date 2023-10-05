@@ -46,12 +46,4 @@ trait IntegrationTest extends AnyWordSpec
     .in(Environment.simple(mode = Mode.Dev))
     .configure(config)
     .build()
-
-  override def beforeAll(): Unit = {
-    super.beforeAll()
-  }
-
-  override def afterAll(): Unit = {
-    super.afterAll()
-  }
 }

@@ -26,7 +26,5 @@ class AppConfigStub extends MockFactory {
     override lazy val encryptionKey: String = "encryptionKey12345"
     override lazy val useEncryption: Boolean = encrypt
 
-    override lazy val employmentBaseUrl: String = "http://localhost:11111"
-
   }
 }

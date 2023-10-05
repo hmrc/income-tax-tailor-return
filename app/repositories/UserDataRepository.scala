@@ -17,7 +17,7 @@
 package repositories
 
 import config.AppConfig
-import models.mongo.AboutYouUserData
+import models.mongo.UserData
 import org.mongodb.scala.bson.conversions.Bson
 import org.mongodb.scala.model.Filters.{and, equal}
 import org.mongodb.scala.model._
@@ -34,15 +34,15 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class AboutYouUserDataRepository @Inject()(
+class UserDataRepository @Inject()(
                                     mongoComponent: MongoComponent,
                                     appConfig: AppConfig,
                                     clock: Clock
                                   )(implicit ec: ExecutionContext, crypto: Encrypter with Decrypter)
-  extends PlayMongoRepository[AboutYouUserData](
-    collectionName = "About-You-User-Data",
+  extends PlayMongoRepository[UserData](
+    collectionName = "User-Data",
     mongoComponent = mongoComponent,
-    domainFormat   = AboutYouUserData.encryptedFormat,
+    domainFormat   = UserData.encryptedFormat,
     indexes        = Seq(
       IndexModel(
         Indexes.ascending("lastUpdated"),
@@ -55,22 +55,22 @@ class AboutYouUserDataRepository @Inject()(
 
   implicit val instantFormat: Format[Instant] = MongoJavatimeFormats.instantFormat
 
-  private def filterByNinoYear(nino: String, taxYear: Int): Bson = and(
-    equal("nino", toBson(nino)),
+  private def filterByMtdItIdYear(mtdItId: String, taxYear: Int): Bson = and(
+    equal("mtdItId", toBson(mtdItId)),
     equal("taxYear", toBson(taxYear))
   )
 
-  def get(nino: String, taxYear: Int): Future[Option[AboutYouUserData]] =
-        collection.find(filterByNinoYear(nino, taxYear))
+  def get(mtdItId: String, taxYear: Int): Future[Option[UserData]] =
+        collection.find(filterByMtdItIdYear(mtdItId, taxYear))
           .headOption()
 
-  def set(userData: AboutYouUserData): Future[Boolean] = {
+  def set(userData: UserData): Future[Boolean] = {
 
     val updatedUserData = userData copy (lastUpdated = Instant.now(clock))
 
     collection
       .replaceOne(
-        filter = filterByNinoYear(updatedUserData.nino, updatedUserData.taxYear),
+        filter = filterByMtdItIdYear(updatedUserData.mtdItId, updatedUserData.taxYear),
         replacement = updatedUserData,
         options = ReplaceOptions().upsert(true)
       )
@@ -78,9 +78,9 @@ class AboutYouUserDataRepository @Inject()(
       .map(_ => true)
   }
 
-  def clear(nino: String, taxYear: Int): Future[Boolean] =
+  def clear(mtdItId: String, taxYear: Int): Future[Boolean] =
     collection
-      .deleteOne(filterByNinoYear(nino, taxYear))
+      .deleteOne(filterByMtdItIdYear(mtdItId, taxYear))
       .toFuture()
       .map(_ => true)
 }

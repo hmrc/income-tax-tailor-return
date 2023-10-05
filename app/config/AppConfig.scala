@@ -25,12 +25,5 @@ import scala.concurrent.duration.Duration
 class AppConfig @Inject()(config: ServicesConfig) {
   lazy val useEncryption: Boolean = config.getBoolean("mongodb.useEncryption")
   lazy val encryptionKey: String = config.getString("mongodb.encryption.key")
-  lazy val employmentBaseUrl: String = config.baseUrl("income-tax-employment")
-
-  lazy val ifAuthorisationToken: String = "microservice.services.integration-framework.authorisation-token"
-  lazy val ifBaseUrl: String = config.baseUrl(serviceName = "integration-framework")
-  lazy val ifEnvironment: String = config.getString(key = "microservice.services.integration-framework.environment")
   def mongoTTL: Long = Duration(config.getString("mongodb.timeToLive")).toDays.toInt
-  def authorisationTokenFor(api: String): String = config.getString(s"microservice.services.integration-framework.authorisation-token.$api")
-
 }
