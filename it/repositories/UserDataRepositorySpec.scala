@@ -17,9 +17,12 @@
 package repositories
 
 import com.fasterxml.jackson.core.JsonParseException
+import models.Done
 import models.mongo.UserData
 import org.mongodb.scala.bson.BsonDocument
+import org.mongodb.scala.bson.conversions.Bson
 import org.mongodb.scala.model.Filters
+import org.scalatest.OptionValues
 import play.api.Configuration
 import play.api.libs.json.Json
 import support.IntegrationTest
@@ -33,6 +36,7 @@ import java.util.Base64
 
 class UserDataRepositorySpec
   extends IntegrationTest
+    with OptionValues
     with DefaultPlayMongoRepositorySupport[UserData] {
 
   private val instant = Instant.now.truncatedTo(ChronoUnit.MILLIS)
@@ -57,7 +61,7 @@ class UserDataRepositorySpec
     clock = stubClock
   )(ec, crypto)
 
-  def filterByMtdItIdYear(mtdItId: String, taxYear: Int) = Filters.and(Filters.equal("mtdItId", mtdItId),Filters.equal("taxYear", taxYear))
+  def filterByMtdItIdYear(mtdItId: String, taxYear: Int): Bson = Filters.and(Filters.equal("mtdItId", mtdItId),Filters.equal("taxYear", taxYear))
 
   ".set" should  {
 
@@ -66,10 +70,10 @@ class UserDataRepositorySpec
       val expectedResult = userData copy (lastUpdated = instant)
 
       val setResult = repository.set(userData).futureValue
-      val updatedRecord = find(filterByMtdItIdYear(userData.mtdItId, userData.taxYear)).futureValue.headOption
+      val updatedRecord = find(filterByMtdItIdYear(userData.mtdItId, userData.taxYear)).futureValue.headOption.value
 
-      setResult shouldBe ""
-      updatedRecord shouldBe ""
+      setResult shouldBe Done
+      updatedRecord shouldBe expectedResult
     }
 
     "must store the data section as encrypted bytes" in {

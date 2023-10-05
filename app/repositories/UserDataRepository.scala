@@ -17,6 +17,7 @@
 package repositories
 
 import config.AppConfig
+import models.Done
 import models.mongo.UserData
 import org.mongodb.scala.bson.conversions.Bson
 import org.mongodb.scala.model.Filters.{and, equal}
@@ -45,6 +46,11 @@ class UserDataRepository @Inject()(
     domainFormat   = UserData.encryptedFormat,
     indexes        = Seq(
       IndexModel(
+        Indexes.compoundIndex(Indexes.ascending("mtdItId", "taxYear")),
+        IndexOptions()
+          .name("mtdItId-taxYear-index")
+      ),
+      IndexModel(
         Indexes.ascending("lastUpdated"),
         IndexOptions()
           .name("last-updated-index")
@@ -64,7 +70,7 @@ class UserDataRepository @Inject()(
         collection.find(filterByMtdItIdYear(mtdItId, taxYear))
           .headOption()
 
-  def set(userData: UserData): Future[Boolean] = {
+  def set(userData: UserData): Future[Done] = {
 
     val updatedUserData = userData copy (lastUpdated = Instant.now(clock))
 
@@ -75,12 +81,12 @@ class UserDataRepository @Inject()(
         options = ReplaceOptions().upsert(true)
       )
       .toFuture()
-      .map(_ => true)
+      .map(_ => Done)
   }
 
-  def clear(mtdItId: String, taxYear: Int): Future[Boolean] =
+  def clear(mtdItId: String, taxYear: Int): Future[Done] =
     collection
       .deleteOne(filterByMtdItIdYear(mtdItId, taxYear))
       .toFuture()
-      .map(_ => true)
+      .map(_ => Done)
 }
