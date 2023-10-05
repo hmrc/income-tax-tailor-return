@@ -35,6 +35,7 @@ object AppDependencies {
     "com.typesafe.play" %% "play-test" % current % Test,
     "uk.gov.hmrc.mongo" %% "hmrc-mongo-test-play-28" % hmrcMongoVersion % Test,
     "org.scalamock" %% "scalamock" % "5.2.0" % Test,
+    "org.mockito"   %% "mockito-scala"      % "1.17.12",
     "org.scalatest" %% "scalatest" % "3.2.15" % Test,
     "com.vladsch.flexmark" % "flexmark-all" % "0.64.0" % "test, it",
     "com.github.tomakehurst" % "wiremock-jre8" % "2.35.0" % "test, it"

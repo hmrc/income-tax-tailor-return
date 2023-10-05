@@ -66,9 +66,22 @@ class UserDataRepository @Inject()(
     equal("taxYear", toBson(taxYear))
   )
 
+  def keepAlive(mtdItId: String, taxYear: Int): Future[Done] =
+    collection
+      .updateOne(
+        filter = filterByMtdItIdYear(mtdItId, taxYear),
+        update = Updates.set("lastUpdated", Instant.now(clock)),
+      )
+      .toFuture()
+      .map(_ => Done)
+
   def get(mtdItId: String, taxYear: Int): Future[Option[UserData]] =
-        collection.find(filterByMtdItIdYear(mtdItId, taxYear))
+    keepAlive(mtdItId, taxYear).flatMap {
+      _ =>
+        collection
+          .find(filterByMtdItIdYear(mtdItId, taxYear))
           .headOption()
+    }
 
   def set(userData: UserData): Future[Done] = {
 

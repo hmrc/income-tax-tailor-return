@@ -17,6 +17,7 @@
 package controllers
 
 import controllers.predicates.AuthorisedAction
+import models.TaxYearPathBindable.TaxYear
 import models.mongo.UserData
 import play.api.libs.json.{JsSuccess, Json}
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
@@ -34,10 +35,9 @@ class UserDataController @Inject()(
                                   )(implicit ec: ExecutionContext)
   extends BackendController(cc) {
 
-  def get(taxYear: Int): Action[AnyContent] = authorisedAction.async { request =>
-    // pull nino from user
+  def get(taxYear: TaxYear): Action[AnyContent] = authorisedAction.async { request =>
       repository
-        .get(request.mtditid, taxYear)
+        .get(request.mtditid, taxYear.taxYear)
         .map {
           _.map(userData => Ok(Json.toJson(userData)))
             .getOrElse(NotFound)
@@ -52,9 +52,16 @@ class UserDataController @Inject()(
       }
   }
 
-  def clear(taxYear: Int): Action[AnyContent] = authorisedAction.async { request =>
+  def keepAlive(taxYear: Int): Action[AnyContent] = authorisedAction.async {
+    request =>
       repository
-        .clear(request.mtditid, taxYear)
+        .keepAlive(request.mtditid, taxYear)
+        .map(_ => NoContent)
+  }
+
+  def clear(taxYear: TaxYear): Action[AnyContent] = authorisedAction.async { request =>
+      repository
+        .clear(request.mtditid, taxYear.taxYear)
         .map(_ => NoContent)
   }
 }

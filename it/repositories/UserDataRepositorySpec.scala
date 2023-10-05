@@ -22,6 +22,7 @@ import models.mongo.UserData
 import org.mongodb.scala.bson.BsonDocument
 import org.mongodb.scala.bson.conversions.Bson
 import org.mongodb.scala.model.Filters
+import org.scalamock.scalatest.MockFactory
 import org.scalatest.OptionValues
 import play.api.Configuration
 import play.api.libs.json.Json
@@ -37,12 +38,14 @@ import java.util.Base64
 class UserDataRepositorySpec
   extends IntegrationTest
     with OptionValues
-    with DefaultPlayMongoRepositorySupport[UserData] {
+    with DefaultPlayMongoRepositorySupport[UserData]
+    with MockFactory {
 
   private val instant = Instant.now.truncatedTo(ChronoUnit.MILLIS)
   private val stubClock: Clock = Clock.fixed(instant, ZoneId.systemDefault)
 
   private val userData = UserData("mtdItId", 2023, Json.obj("foo" -> "bar"), Instant.ofEpochSecond(1))
+  private val invalidTaxYear = 1999
 
   private val aesKey = {
     val aesKey = new Array[Byte](32)
@@ -59,13 +62,13 @@ class UserDataRepositorySpec
     mongoComponent = mongoComponent,
     appConfig = appConfig,
     clock = stubClock
-  )(ec, crypto)
+  )
 
   def filterByMtdItIdYear(mtdItId: String, taxYear: Int): Bson = Filters.and(Filters.equal("mtdItId", mtdItId),Filters.equal("taxYear", taxYear))
 
   ".set" should  {
 
-    "must set the last updated time on the supplied user answers to `now`, and save them" in {
+    "set the last updated time on the supplied user answers to `now`, and save them" in {
 
       val expectedResult = userData copy (lastUpdated = instant)
 
@@ -76,7 +79,7 @@ class UserDataRepositorySpec
       updatedRecord shouldBe expectedResult
     }
 
-    "must store the data section as encrypted bytes" in {
+    "store the data section as encrypted bytes" in {
 
       repository.set(userData).futureValue
 
@@ -95,47 +98,94 @@ class UserDataRepositorySpec
     }
   }
 
-//  ".get" when {
-//
-//    "when there is a record for this id" should {
-//
-//      "must update the lastUpdated time and get the record" in {
-//
-//        insert(userData).futureValue
-//
-//        val result = repository.get(userData.id).futureValue
-//        val expectedResult = userData copy (lastUpdated = instant)
-//
-//        result.value mustEqual expectedResult
-//      }
-//    }
-//
-//    "when there is no record for this id" should {
-//
-//      "must return None" in {
-//
-//        repository.get("id that does not exist").futureValue must not be defined
-//      }
-//    }
-//  }
-//
-//  ".clear" should {
-//
-//    "must remove a record" in {
-//
-//      insert(userData).futureValue
-//
-//      val result = repository.clear("mtdItId", 2023).futureValue
-//
-//      result shouldBe
-//      repository.get("mtdItId", 2023).futureValue must not be defined
-//    }
-//
-//    "must return Done when there is no record to remove" in {
-//      val result = repository.clear("id that does not exist", 2023).futureValue
-//
-//      result shouldBe "fail"
-//    }
-//  }
+  ".get" should {
+
+    "update the lastUpdated time and get the record" when {
+
+      "there is a record for this mtdItId" in {
+
+        insert(userData).futureValue
+
+        val result = repository.get(userData.mtdItId, userData.taxYear).futureValue
+        val expectedResult = userData copy (lastUpdated = instant)
+        println(Json.toJson(userData).toString())
+
+        result.value shouldBe expectedResult
+      }
+    }
+
+    "return None" when {
+
+      "there is no record for this mtdItId" in {
+
+        repository.get("mtdItId that does not exist", userData.taxYear).futureValue should not be defined
+      }
+
+      "there is no record for this taxYear" in {
+
+        repository.get(userData.mtdItId, invalidTaxYear).futureValue should not be defined
+      }
+    }
+  }
+
+  ".clear" should {
+
+    "remove a record" in {
+
+      insert(userData).futureValue
+
+      val result = repository.clear(userData.mtdItId, userData.taxYear).futureValue
+
+      result shouldBe Done
+      repository.get(userData.mtdItId, userData.taxYear).futureValue should not be defined
+    }
+
+    "should return Done when there is no record for the mtdItId to remove" in {
+      val result = repository.clear("mtdItId that does not exist", userData.taxYear).futureValue
+
+      result shouldBe Done
+    }
+
+    "should return Done when there is no record for the TaxYear to remove" in {
+      val result = repository.clear(userData.mtdItId, invalidTaxYear).futureValue
+
+      result shouldBe Done
+    }
+  }
+
+
+  ".keepAlive" should {
+
+    "update its lastUpdated to `now` and return Done" when {
+
+      "there is a record for this mtdItId" in {
+
+        insert(userData).futureValue
+
+        val result = repository.keepAlive(userData.mtdItId, userData.taxYear).futureValue
+
+        val expectedUpdatedAnswers = userData copy (lastUpdated = instant)
+
+        result shouldBe Done
+        val updatedAnswers = find(filterByMtdItIdYear(userData.mtdItId, userData.taxYear)).futureValue.headOption.value
+        updatedAnswers shouldBe expectedUpdatedAnswers
+      }
+    }
+
+    "when there is no record for this mtdItId" should {
+
+      "return Done" in {
+
+        repository.keepAlive("id that does not exist", 2023).futureValue shouldBe Done
+      }
+    }
+    "when there is no record for this taxYear" should {
+
+      "return Done" in {
+
+        repository.keepAlive(userData.mtdItId, invalidTaxYear).futureValue shouldBe Done
+      }
+    }
+  }
 
 }

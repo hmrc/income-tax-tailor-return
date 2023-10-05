@@ -16,6 +16,7 @@
 
 package config
 
+import controllers.predicates.AuthorisedAction
 import play.api.{Configuration, Environment}
 import play.api.inject.Binding
 import uk.gov.hmrc.crypto.{Decrypter, Encrypter}
@@ -29,6 +30,7 @@ class Module extends play.api.inject.Module {
     Seq(
       bind[AppConfig].toSelf.eagerly(),
       bind[Clock].toInstance(Clock.systemUTC()),
+      bind[AuthorisedAction].toSelf.eagerly(),
       bind[Encrypter with Decrypter].toProvider[CryptoProvider]
     )
   }

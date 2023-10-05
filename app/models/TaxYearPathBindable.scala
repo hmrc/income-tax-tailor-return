@@ -14,14 +14,23 @@
  * limitations under the License.
  */
 
-package support
+package models
 
-import play.api.mvc.ControllerComponents
-import play.api.test.Helpers.stubControllerComponents
-import support.providers.ResultBodyConsumerProvider
+import play.api.mvc.PathBindable
 
-trait ControllerUnitTest extends UnitTest
-  with ResultBodyConsumerProvider {
+object TaxYearPathBindable {
 
-  protected val cc: ControllerComponents = stubControllerComponents()
+  implicit def pathBindable: PathBindable[TaxYear] = new PathBindable[TaxYear] {
+
+    override def bind(key: String, value: String): Either[String, TaxYear] =
+      value match {
+        case result if (result.matches("^20\\d{2}$")) => Right(TaxYear(taxYear = result.toInt))
+        case _ => Left("Invalid taxYear")
+      }
+
+    override def unbind(key: String, value: TaxYear): String =
+      value.taxYear.toString
+  }
+  case class TaxYear(taxYear: Int)
 }
+

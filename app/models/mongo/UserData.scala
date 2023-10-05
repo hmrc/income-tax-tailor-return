@@ -42,7 +42,7 @@ case class UserData(
         (__ \ "mtdItId").read[String] and
           (__ \ "taxYear").read[Int] and
           (__ \ "data").read[JsObject] and
-          (__ \ "lastUpdated").read[Instant]
+          (__ \ "lastUpdated").read(MongoJavatimeFormats.instantFormat)
         ) (UserData.apply _)
     }
 
@@ -54,7 +54,7 @@ case class UserData(
         (__ \ "mtdItId").write[String] and
           (__ \ "taxYear").write[Int] and
           (__ \ "data").write[JsObject] and
-          (__ \ "lastUpdated").write[Instant]
+          (__ \ "lastUpdated").write(MongoJavatimeFormats.instantFormat)
         ) (unlift(UserData.unapply))
     }
 
