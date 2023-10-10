@@ -146,6 +146,22 @@ class UserDataControllerSpec
         status(result) shouldBe NO_CONTENT
         verify(mockRepo, times(1)).set(eqTo(userData))
       }
+      "return Bad Request when the taxYear is invalid" in {
+
+        when(mockRepo.set(any())) thenReturn Future.successful(Done)
+
+        val request =
+          FakeRequest(POST, routes.UserDataController.set.url)
+            .withHeaders(
+              "mtditid" -> userData.mtdItId,
+              "Content-Type"         -> "application/json"
+            )
+            .withBody(Json.toJson(userData.copy(taxYear = 1999)).toString)
+
+        val result = route(app, request).value
+
+        status(result) shouldBe BAD_REQUEST
+      }
 
       "return UNAUTHORIZED when the request does not have a mtditid in request header" in {
 
@@ -207,6 +223,43 @@ class UserDataControllerSpec
 
         val request =
           FakeRequest(DELETE, routes.UserDataController.clear(invalidTaxYear).url)
+            .withBody(Json.toJson(userData))
+
+        val result = route(app, request).value
+
+        status(result) shouldBe BAD_REQUEST
+      }
+    }
+    ".keepAlive" should {
+
+      "return No Content when keepAlive updates last updated" in {
+
+        when(mockRepo.keepAlive(eqTo(userData.mtdItId), eqTo(userData.taxYear))) thenReturn Future.successful(Done)
+
+        val request =
+          FakeRequest(GET, routes.UserDataController.keepAlive(taxYear).url)
+            .withHeaders("mtditid" -> userData.mtdItId)
+
+        val result = route(app, request).value
+
+        status(result) shouldBe NO_CONTENT
+        verify(mockRepo, times(1)).clear(eqTo(userData.mtdItId), eqTo(userData.taxYear))
+      }
+
+      "return UNAUTHORIZED when the request does not have a mtditid in request header" in {
+
+        val request =
+          FakeRequest(GET, routes.UserDataController.keepAlive(taxYear).url)
+            .withBody(Json.toJson(userData))
+
+        val result = route(app, request).value
+
+        status(result) shouldBe UNAUTHORIZED
+      }
+      "return BAD_REQUEST when the request does taxYear is invalid" in {
+
+        val request =
+          FakeRequest(GET, routes.UserDataController.keepAlive(invalidTaxYear).url)
             .withBody(Json.toJson(userData))
 
         val result = route(app, request).value

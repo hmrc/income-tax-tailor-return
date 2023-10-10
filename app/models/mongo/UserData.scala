@@ -40,7 +40,7 @@ case class UserData(
 
       (
         (__ \ "mtdItId").read[String] and
-          (__ \ "taxYear").read[Int] and
+          (__ \ "taxYear").read[Int].filter(_.toString.matches("^20\\d{2}$")) and
           (__ \ "data").read[JsObject] and
           (__ \ "lastUpdated").read(MongoJavatimeFormats.instantFormat)
         ) (UserData.apply _)

@@ -4,5 +4,5 @@
 GET		/data/:taxYear                                                 controllers.UserDataController.get(taxYear: TaxYear)
 POST	/data                                                          controllers.UserDataController.set
 DELETE	/data/:taxYear                                                 controllers.UserDataController.clear(taxYear: TaxYear)
-
+GET     /keep-alive/:taxYear                                           controllers.UserDataController.keepAlive(taxYear: TaxYear)
 

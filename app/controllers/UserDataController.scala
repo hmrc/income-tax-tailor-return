@@ -52,6 +52,13 @@ class UserDataController @Inject()(
       }
   }
 
+  def keepAlive(taxYear: TaxYear): Action[AnyContent] = authorisedAction.async {
+    request =>
+      repository
+        .keepAlive(request.mtditid, taxYear.taxYear)
+        .map(_ => NoContent)
+  }
+
   def clear(taxYear: TaxYear): Action[AnyContent] = authorisedAction.async { request =>
       repository
         .clear(request.mtditid, taxYear.taxYear)
