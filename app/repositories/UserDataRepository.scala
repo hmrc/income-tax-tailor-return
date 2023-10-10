@@ -70,7 +70,7 @@ class UserDataRepository @Inject()(
     collection
       .updateOne(
         filter = filterByMtdItIdYear(mtdItId, taxYear),
-        update = Updates.set("lastUpdated", Instant.now(clock)),
+        update = Updates.set("lastUpdated", Instant.now(clock))
       )
       .toFuture()
       .map(_ => Done)

@@ -237,7 +237,7 @@ class UserDataControllerSpec
         when(mockRepo.keepAlive(eqTo(userData.mtdItId), eqTo(userData.taxYear))) thenReturn Future.successful(Done)
 
         val request =
-          FakeRequest(GET, routes.UserDataController.keepAlive(taxYear).url)
+          FakeRequest(POST, routes.UserDataController.keepAlive(taxYear).url)
             .withHeaders("mtditid" -> userData.mtdItId)
 
         val result = route(app, request).value
@@ -249,7 +249,7 @@ class UserDataControllerSpec
       "return UNAUTHORIZED when the request does not have a mtditid in request header" in {
 
         val request =
-          FakeRequest(GET, routes.UserDataController.keepAlive(taxYear).url)
+          FakeRequest(POST, routes.UserDataController.keepAlive(taxYear).url)
             .withBody(Json.toJson(userData))
 
         val result = route(app, request).value
@@ -259,7 +259,7 @@ class UserDataControllerSpec
       "return BAD_REQUEST when the request does taxYear is invalid" in {
 
         val request =
-          FakeRequest(GET, routes.UserDataController.keepAlive(invalidTaxYear).url)
+          FakeRequest(POST, routes.UserDataController.keepAlive(invalidTaxYear).url)
             .withBody(Json.toJson(userData))
 
         val result = route(app, request).value
