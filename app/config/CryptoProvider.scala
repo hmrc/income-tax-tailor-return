@@ -14,16 +14,18 @@
  * limitations under the License.
  */
 
-package models.employment
+package config
 
-import play.api.libs.json.{Json, OFormat}
+import play.api.Configuration
+import uk.gov.hmrc.crypto.{Decrypter, Encrypter, SymmetricCryptoFactory}
 
-case class EmploymentExpenses(submittedOn: Option[String],
-                              dateIgnored: Option[String],
-                              totalExpenses: Option[BigDecimal],
-                              expenses: Option[Expenses])
+import javax.inject.{Inject, Provider, Singleton}
 
-object EmploymentExpenses {
-  implicit val format: OFormat[EmploymentExpenses] = Json.format[EmploymentExpenses]
+@Singleton
+class CryptoProvider @Inject()(
+                                 configuration: Configuration
+                               ) extends Provider[Encrypter with Decrypter] {
+
+  override def get(): Encrypter with Decrypter =
+    SymmetricCryptoFactory.aesGcmCryptoFromConfig("crypto", configuration.underlying)
 }
-

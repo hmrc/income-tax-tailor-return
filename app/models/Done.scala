@@ -14,19 +14,7 @@
  * limitations under the License.
  */
 
-package support.providers
+package models
 
-import akka.actor.ActorSystem
-import play.api.mvc.Result
-import play.api.test.DefaultAwaitTimeout
-import play.api.test.Helpers.await
-
-import scala.concurrent.ExecutionContext.Implicits.global
-
-trait ResultBodyConsumerProvider extends DefaultAwaitTimeout {
-
-  private implicit val actorSystem: ActorSystem = ActorSystem()
-
-  def consumeBody(result: Result): String =
-    await(result.body.consumeData.map(_.utf8String))
-}
+sealed abstract class Done
+object Done extends Done

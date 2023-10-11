@@ -23,8 +23,7 @@ import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
-import play.api.{Application, Environment, Mode}
-import support.providers.TaxYearProvider
+import play.api.{Application, Environment}
 
 import scala.concurrent.ExecutionContext
 
@@ -32,26 +31,13 @@ trait IntegrationTest extends AnyWordSpec
   with FutureAwaits with DefaultAwaitTimeout
   with Matchers
   with GuiceOneServerPerSuite
-  with BeforeAndAfterAll
-  with TaxYearProvider {
+  with BeforeAndAfterAll {
 
   protected implicit val ec: ExecutionContext = ExecutionContext.Implicits.global
   protected implicit lazy val appConfig: AppConfig = app.injector.instanceOf[AppConfig]
 
-  protected val config: Map[String, String] = Map(
-    "mongodb.useEncryption" -> "true",
-  )
 
   override implicit lazy val app: Application = new GuiceApplicationBuilder()
-    .in(Environment.simple(mode = Mode.Dev))
-    .configure(config)
+    .in(Environment.simple())
     .build()
-
-  override def beforeAll(): Unit = {
-    super.beforeAll()
-  }
-
-  override def afterAll(): Unit = {
-    super.afterAll()
-  }
 }

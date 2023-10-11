@@ -14,11 +14,12 @@
  * limitations under the License.
  */
 
-package services
+package models
 
-import uk.gov.hmrc.auth.core.{AuthConnector, AuthorisedFunctions}
+abstract class Enrolment(val key: String, val value: String)
 
-import javax.inject.{Inject, Singleton}
+object Enrolment {
+  case object MtdIncomeTax extends Enrolment(key = "HMRC-MTD-IT", value = "MTDITID")
 
-@Singleton
-class AuthService @Inject()(val authConnector: AuthConnector) extends AuthorisedFunctions
+  case object Agent extends Enrolment(key = "HMRC-AS-AGENT", value = "AgentReferenceNumber")
+}
