@@ -41,7 +41,7 @@ class UserDataRepository @Inject()(
                                     clock: Clock
                                   )(implicit ec: ExecutionContext, crypto: Encrypter with Decrypter)
   extends PlayMongoRepository[UserData](
-    collectionName = "User-Data",
+    collectionName = "userData",
     mongoComponent = mongoComponent,
     domainFormat   = UserData.encryptedFormat,
     indexes        = Seq(
