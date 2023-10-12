@@ -23,7 +23,7 @@ import org.mongodb.scala.bson.conversions.Bson
 import org.mongodb.scala.model.Filters.{and, equal}
 import org.mongodb.scala.model._
 import play.api.Logging
-import play.api.libs.json.Format
+import play.api.libs.json.{Format, Json}
 import uk.gov.hmrc.crypto.{Decrypter, Encrypter}
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.Codecs.toBson
@@ -88,7 +88,7 @@ class UserDataRepository @Inject()(
   def set(userData: UserData): Future[Done] = {
 
     val updatedUserData = userData copy (lastUpdated = Instant.now(clock))
-
+    logger.error(s"Delete me ${Json.toJson(updatedUserData)}")
     collection
       .replaceOne(
         filter = filterByMtdItIdYear(updatedUserData.mtdItId, updatedUserData.taxYear),
