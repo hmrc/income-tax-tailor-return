@@ -46,7 +46,7 @@ class UserDataController @Inject()(
             NotFound
         }.recover {
       case e =>
-        logger.error(s"[UserDataController.get] recovered from $e")
+        logger.error(s"[UserDataController.get] recovered from: ${e.getMessage}")
         InternalServerError
     }
   }
@@ -58,7 +58,7 @@ class UserDataController @Inject()(
       case _ => Future.successful(BadRequest)
     }).recover {
       case e =>
-        logger.error(s"[UserDataController.set] recovered from $e")
+        logger.error(s"[UserDataController.set] recovered from: ${e.getMessage}")
         InternalServerError
     }
   }
