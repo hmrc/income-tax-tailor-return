@@ -37,7 +37,6 @@ class UserDataController @Inject()(
   extends BackendController(cc) with Logging {
 
   def get(taxYear: TaxYear): Action[AnyContent] = authorisedAction.async { request =>
-    try
       repository
         .get(request.mtditid, taxYear.taxYear)
         .map {
@@ -49,24 +48,17 @@ class UserDataController @Inject()(
       case e =>
         logger.error(s"[UserDataController.get] recovered from $e")
         InternalServerError
-      case _ =>
-        logger.error("[UserDataController.get] recovered with unknown")
-        InternalServerError
     }
   }
 
   def set: Action[AnyContent] = authorisedAction.async { request =>
-    try(
-    request.body.asJson.map(_.validate[UserData]) match {
+    (request.body.asJson.map(_.validate[UserData]) match {
       case Some(JsSuccess(model, _)) =>
         repository.set(model).map(_ => NoContent)
       case _ => Future.successful(BadRequest)
     }).recover {
       case e =>
         logger.error(s"[UserDataController.set] recovered from $e")
-        InternalServerError
-      case _ =>
-        logger.error("[UserDataController.set] recovered with unknown")
         InternalServerError
     }
   }
