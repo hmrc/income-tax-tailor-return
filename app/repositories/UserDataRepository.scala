@@ -22,6 +22,7 @@ import models.mongo.UserData
 import org.mongodb.scala.bson.conversions.Bson
 import org.mongodb.scala.model.Filters.{and, equal}
 import org.mongodb.scala.model._
+import play.api.Logging
 import play.api.libs.json.Format
 import uk.gov.hmrc.crypto.{Decrypter, Encrypter}
 import uk.gov.hmrc.mongo.MongoComponent
@@ -57,7 +58,7 @@ class UserDataRepository @Inject()(
           .expireAfter(appConfig.mongoTTL, TimeUnit.DAYS)
       )
     )
-  ) {
+  ) with Logging{
 
   implicit val instantFormat: Format[Instant] = MongoJavatimeFormats.instantFormat
 
@@ -75,13 +76,14 @@ class UserDataRepository @Inject()(
       .toFuture()
       .map(_ => Done)
 
-  def get(mtdItId: String, taxYear: Int): Future[Option[UserData]] =
+  def get(mtdItId: String, taxYear: Int): Future[Option[UserData]] = {
     keepAlive(mtdItId, taxYear).flatMap {
       _ =>
         collection
           .find(filterByMtdItIdYear(mtdItId, taxYear))
           .headOption()
     }
+  }
 
   def set(userData: UserData): Future[Done] = {
 
