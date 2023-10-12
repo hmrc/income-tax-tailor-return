@@ -66,7 +66,7 @@ class AuthorisedAction @Inject()(
 
     implicit lazy val headerCarrier: HeaderCarrier = HeaderCarrierConverter.fromRequest(request)
 
-    request.headers.get("mtditid").fold {
+    request.headers.get(Enrolment.MtdIncomeTax.value).fold {
       logger.warn("[AuthorisedAction][async] - No MTDITID in the header. Returning unauthorised.")
       unauthorized
     }(

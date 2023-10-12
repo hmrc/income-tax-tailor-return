@@ -19,6 +19,7 @@ package controllers
 import controllers.predicates.IdentifierAction
 import models.TaxYearPathBindable.TaxYear
 import models.mongo.UserData
+import play.api.Logging
 import play.api.libs.json.{JsSuccess, Json}
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import repositories.UserDataRepository
@@ -33,23 +34,33 @@ class UserDataController @Inject()(
                                     authorisedAction: IdentifierAction,
                                     repository: UserDataRepository
                                   )(implicit ec: ExecutionContext)
-  extends BackendController(cc) {
+  extends BackendController(cc) with Logging {
 
   def get(taxYear: TaxYear): Action[AnyContent] = authorisedAction.async { request =>
       repository
         .get(request.mtditid, taxYear.taxYear)
         .map {
-          _.map(userData => Ok(Json.toJson(userData)))
-            .getOrElse(NotFound)
-        }
+          case Some(value) => Ok(Json.toJson(value))
+          case None =>
+            logger.warn("[UserDataController.get] No existing data returning Not Found")
+            NotFound
+        }.recover {
+      case e =>
+        logger.error(s"[UserDataController.get] recovered from $e")
+        InternalServerError
+    }
   }
 
   def set: Action[AnyContent] = authorisedAction.async { request =>
-      request.body.asJson.map(_.validate[UserData]) match {
-        case Some(JsSuccess(model, _)) =>
-          repository.set(model).map(_ => NoContent)
-        case _ => Future.successful(BadRequest)
-      }
+    (request.body.asJson.map(_.validate[UserData]) match {
+      case Some(JsSuccess(model, _)) =>
+        repository.set(model).map(_ => NoContent)
+      case _ => Future.successful(BadRequest)
+    }).recover {
+      case e =>
+        logger.error(s"[UserDataController.set] recovered from $e")
+        InternalServerError
+    }
   }
 
   def keepAlive(taxYear: TaxYear): Action[AnyContent] = authorisedAction.async {
@@ -60,8 +71,8 @@ class UserDataController @Inject()(
   }
 
   def clear(taxYear: TaxYear): Action[AnyContent] = authorisedAction.async { request =>
-      repository
-        .clear(request.mtditid, taxYear.taxYear)
-        .map(_ => NoContent)
+    repository
+      .clear(request.mtditid, taxYear.taxYear)
+      .map(_ => NoContent)
   }
 }
