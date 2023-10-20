@@ -40,6 +40,7 @@ class AuthorisedAction @Inject()(
   extends IdentifierAction with AuthorisedFunctions with Logging {
 
   private val unauthorized: Future[Result] = Future.successful(Unauthorized)
+
   private case class AgentDetails(mtdId: String, arn: String)
 
   private def authorisedForMtdItId(enrolments: Enrolments): Option[String] = {
@@ -48,6 +49,7 @@ class AuthorisedAction @Inject()(
       id <- enrolment.getIdentifier(Enrolment.MtdIncomeTax.value)
     } yield id.value
   }
+
   private def authorisedForMtdItId(mtditid: String, enrolments: Enrolments): Option[String] = {
     enrolments.enrolments.find(x => x.identifiers.exists(i => i.value.equals(mtditid)))
       .flatMap(_.getIdentifier(Enrolment.MtdIncomeTax.value)).map(_.value)
@@ -91,7 +93,19 @@ class AuthorisedAction @Inject()(
         }
     )
   }
+}
+class EarlyPrivateLaunchAuthorisedAction @Inject()(
+                                               override val authConnector: AuthConnector,
+                                               val parser: BodyParsers.Default
+                                             )
+                                                  (implicit val executionContext: ExecutionContext)
+  extends IdentifierAction with AuthorisedFunctions with Logging {
+  override def invokeBlock[A](request: Request[A], block: User[A] => Future[Result]): Future[Result] = {
 
+    implicit lazy val headerCarrier: HeaderCarrier = HeaderCarrierConverter.fromRequestAndSession(request, request.session)
 
-
+    authorised() {
+      block(User("1234567890", None)(request))
+    }
+  }
 }
