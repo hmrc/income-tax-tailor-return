@@ -46,6 +46,7 @@ class AuthorisedActionSpec extends AnyWordSpec with Matchers {
     val app = new GuiceApplicationBuilder().build()
     val bodyParsers = app.injector.instanceOf[BodyParsers.Default]
 
+
     "succeed with a identifier Request" when {
 
       "the user is authorised as an individual" in {
@@ -189,6 +190,27 @@ class AuthorisedActionSpec extends AnyWordSpec with Matchers {
         }
       }
     }
+  }
+  "Auth Action [EarlyPrivateLaunchAuthorisedAction]" should {
+
+    "succeed with a identifier Request" in {
+
+      val application = new GuiceApplicationBuilder()
+        .configure(Map("features.earlyPrivateLaunch" -> "true"))
+        .build()
+
+      running(application) {
+
+        val bodyParsers = application.injector.instanceOf[BodyParsers.Default]
+
+        val authAction = new EarlyPrivateLaunchAuthorisedAction(new FakeSuccessfulAuthConnector(), bodyParsers)
+        val controller = new Harness(authAction)
+        val result = controller.onPageLoad()(FakeRequest())
+
+        status(result) shouldBe OK
+      }
+    }
+
   }
 }
 

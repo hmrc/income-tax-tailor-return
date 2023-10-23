@@ -57,7 +57,8 @@ class UserDataRepository @Inject()(
           .name("last-updated-index")
           .expireAfter(appConfig.mongoTTL, TimeUnit.DAYS)
       )
-    )
+    ),
+    replaceIndexes = appConfig.replaceIndexes
   ) with Logging{
 
   implicit val instantFormat: Format[Instant] = MongoJavatimeFormats.instantFormat

@@ -16,7 +16,7 @@
 
 package config
 
-import controllers.predicates.{AuthorisedAction, IdentifierAction}
+import controllers.predicates.{AuthorisedAction, EarlyPrivateLaunchAuthorisedAction, IdentifierAction}
 import play.api.{Configuration, Environment}
 import play.api.inject.Binding
 import uk.gov.hmrc.crypto.{Decrypter, Encrypter}
@@ -27,11 +27,18 @@ import java.time.Clock
 class Module extends play.api.inject.Module {
 
   override def bindings(environment: Environment, configuration: Configuration): collection.Seq[Binding[_]]  = {
+    val authBinding: Binding[_] =
+      if (configuration.get[Boolean]("features.earlyPrivateLaunch")) {
+            bind[IdentifierAction].to[EarlyPrivateLaunchAuthorisedAction].eagerly()
+      } else {
+          bind[IdentifierAction].to[AuthorisedAction].eagerly()
+      }
+
     Seq(
       bind[AppConfig].toSelf.eagerly(),
       bind[Clock].toInstance(Clock.systemUTC()),
-      bind[IdentifierAction].to[AuthorisedAction],
-      bind[Encrypter with Decrypter].toProvider[CryptoProvider]
+      bind[Encrypter with Decrypter].toProvider[CryptoProvider],
+      authBinding
     )
   }
 }
