@@ -102,7 +102,7 @@ class EarlyPrivateLaunchAuthorisedAction @Inject()(
   extends IdentifierAction with AuthorisedFunctions with Logging {
   override def invokeBlock[A](request: Request[A], block: User[A] => Future[Result]): Future[Result] = {
 
-    implicit lazy val headerCarrier: HeaderCarrier = HeaderCarrierConverter.fromRequestAndSession(request, request.session)
+    implicit lazy val headerCarrier: HeaderCarrier = HeaderCarrierConverter.fromRequest(request)
 
     authorised() {
       block(User("1234567890", None)(request))
