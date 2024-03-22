@@ -19,6 +19,9 @@ import uk.gov.hmrc.DefaultBuildSettings
 
 val appName = "income-tax-tailor-return"
 
+ThisBuild / majorVersion := 0
+ThisBuild / scalaVersion := "2.13.12"
+
 lazy val coverageSettings: Seq[Setting[?]] = {
   import scoverage.ScoverageKeys
 
@@ -48,9 +51,7 @@ lazy val coverageSettings: Seq[Setting[?]] = {
 lazy val microservice = Project(appName, file("."))
   .enablePlugins(PlayScala, SbtDistributablesPlugin)
   .settings(
-    majorVersion := 0,
-    scalaVersion := "2.13.12",
-    libraryDependencies ++= AppDependencies.compile ++ AppDependencies.test,
+    libraryDependencies ++= AppDependencies(),
     scalacOptions += "-Wconf:cat=unused-imports&src=html/.*:s",
     scalacOptions += "-Wconf:src=routes/.*:s"
   )
@@ -67,7 +68,6 @@ lazy val microservice = Project(appName, file("."))
 lazy val testSettings: Seq[Def.Setting[?]] = Seq(
   fork := true,
   javaOptions ++= Seq("-Dapplication.router=testOnlyDoNotUseInAppConf.Routes"),
-  unmanagedSourceDirectories.withRank(KeyRanks.Invisible) += baseDirectory.value / "test-utils"
 )
 
 lazy val itSettings = DefaultBuildSettings.itSettings() ++ Seq(
@@ -80,6 +80,3 @@ lazy val it = project
   .enablePlugins(PlayScala)
   .dependsOn(microservice % "test->test") // the "test->test" allows reusing test code and test dependencies
   .settings(testSettings ++ itSettings)
-  .settings(scalaVersion := "2.13.12")
-  .settings(majorVersion := 0)
-  .settings(libraryDependencies ++= AppDependencies.test)
