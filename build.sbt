@@ -14,13 +14,15 @@
  * limitations under the License.
  */
 
-import uk.gov.hmrc.DefaultBuildSettings.integrationTestSettings
 import play.sbt.routes.RoutesKeys
-import uk.gov.hmrc.sbtdistributables.SbtDistributablesPlugin.publishingSettings
+import uk.gov.hmrc.DefaultBuildSettings
 
 val appName = "income-tax-tailor-return"
 
-lazy val coverageSettings: Seq[Setting[_]] = {
+ThisBuild / majorVersion := 0
+ThisBuild / scalaVersion := "2.13.12"
+
+lazy val coverageSettings: Seq[Setting[?]] = {
   import scoverage.ScoverageKeys
 
   val excludedPackages = Seq(
@@ -47,23 +49,34 @@ lazy val coverageSettings: Seq[Setting[_]] = {
 }
 
 lazy val microservice = Project(appName, file("."))
-  .enablePlugins(play.sbt.PlayScala, SbtDistributablesPlugin)
+  .enablePlugins(PlayScala, SbtDistributablesPlugin)
   .settings(
-    // To resolve a bug with version 2.x.x of the scoverage plugin - https://github.com/sbt/sbt/issues/6997
-    libraryDependencySchemes ++= Seq("org.scala-lang.modules" %% "scala-xml" % VersionScheme.Always)
-  )
-  .settings(
-    majorVersion := 0,
-    scalaVersion := "2.13.10",
-    libraryDependencies ++= AppDependencies.compile ++ AppDependencies.test,
+    libraryDependencies ++= AppDependencies(),
     scalacOptions += "-Wconf:cat=unused-imports&src=html/.*:s",
     scalacOptions += "-Wconf:src=routes/.*:s"
   )
-  .configs(IntegrationTest extend Test)
-  .settings(integrationTestSettings(): _*)
+  .configs(Test)
   .settings(resolvers += Resolver.jcenterRepo)
   .settings(PlayKeys.playDefaultPort := 9383)
   .disablePlugins(sbt.plugins.JUnitXmlReportPlugin)
   .disablePlugins(JUnitXmlReportPlugin)
-  .settings(coverageSettings: _*)
-  .settings(RoutesKeys.routesImport ++= Seq("models.TaxYearPathBindable._", "models.TaxYearPathBindable.TaxYear"))
+  .settings(coverageSettings)
+  .settings(RoutesKeys.routesImport ++= Seq("models.TaxYearPathBindable._", "models.TaxYearPathBindable.TaxYear")
+  )
+
+
+lazy val testSettings: Seq[Def.Setting[?]] = Seq(
+  fork := true,
+  javaOptions ++= Seq("-Dapplication.router=testOnlyDoNotUseInAppConf.Routes"),
+)
+
+lazy val itSettings = DefaultBuildSettings.itSettings() ++ Seq(
+  unmanagedSourceDirectories.withRank(KeyRanks.Invisible) := Seq(
+    baseDirectory.value / "it"
+  )
+)
+
+lazy val it = project
+  .enablePlugins(PlayScala)
+  .dependsOn(microservice % "test->test") // the "test->test" allows reusing test code and test dependencies
+  .settings(testSettings ++ itSettings)
