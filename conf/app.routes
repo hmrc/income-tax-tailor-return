@@ -6,3 +6,4 @@ POST	/data                                                          controllers.
 DELETE	/data/:taxYear                                                 controllers.UserDataController.clear(taxYear: TaxYear)
 POST    /keep-alive/:taxYear                                           controllers.UserDataController.keepAlive(taxYear: TaxYear)
 
+GET     /task-list/data/:taxYear                                       controllers.TaskListDataController.get(taxYear: TaxYear)
