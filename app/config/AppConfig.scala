@@ -24,6 +24,7 @@ import scala.concurrent.duration.Duration
 @Singleton
 class AppConfig @Inject()(config: ServicesConfig) {
   def mongoTTL: Long = Duration(config.getString("mongodb.timeToLive")).toDays.toInt
+  def taskListDataTTL: Long = Duration(config.getString("task-list-data.timeToLive")).toDays.toInt
 
   val replaceIndexes: Boolean = config.getBoolean("features.replaceIndexes")
 }

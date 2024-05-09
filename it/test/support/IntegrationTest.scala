@@ -28,14 +28,14 @@ import play.api.{Application, Environment}
 import scala.concurrent.ExecutionContext
 
 trait IntegrationTest extends AnyWordSpec
-  with FutureAwaits with DefaultAwaitTimeout
+  with FutureAwaits
+  with DefaultAwaitTimeout
   with Matchers
   with GuiceOneServerPerSuite
   with BeforeAndAfterAll {
 
   protected implicit val ec: ExecutionContext = ExecutionContext.Implicits.global
   protected implicit lazy val appConfig: AppConfig = app.injector.instanceOf[AppConfig]
-
 
   override implicit lazy val app: Application = new GuiceApplicationBuilder()
     .in(Environment.simple())
