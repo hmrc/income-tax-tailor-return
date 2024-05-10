@@ -20,6 +20,13 @@ Run the following command to start the remaining services locally:
     sudo mongod (If not already running)
     sm --start INCOME_TAX_SUBMISSION_ALL -r
 
+### Running Tests
+- Run Unit Tests:  `sbt test`
+- Run Integration Tests: `sbt it/test`
+- Run Unit and Integration Tests: `sbt test it/test`
+- Run Unit and Integration Tests with coverage report: `sbt runAllChecks`<br/>
+  which runs `clean compile scalastyle coverage test it/test coverageReport`
+
 ### License
 
 This code is open source software licensed under the [Apache 2.0 License]("http://www.apache.org/licenses/LICENSE-2.0.html").
