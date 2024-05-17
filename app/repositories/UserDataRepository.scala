@@ -31,7 +31,6 @@ import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 import uk.gov.hmrc.mongo.play.json.formats.MongoJavatimeFormats
 
 import java.time.{Clock, Instant}
-import java.util.concurrent.TimeUnit
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -45,21 +44,9 @@ class UserDataRepository @Inject()(
     collectionName = "userData",
     mongoComponent = mongoComponent,
     domainFormat   = UserData.encryptedFormat,
-    indexes        = Seq(
-      IndexModel(
-        Indexes.compoundIndex(Indexes.ascending("mtdItId", "taxYear")),
-        IndexOptions()
-          .name("mtdItId-taxYear-index")
-      ),
-      IndexModel(
-        Indexes.ascending("lastUpdated"),
-        IndexOptions()
-          .name("last-updated-index")
-          .expireAfter(appConfig.mongoTTL, TimeUnit.DAYS)
-      )
-    ),
+    indexes = RepositoryIndexes.indexes()(appConfig),
     replaceIndexes = appConfig.replaceIndexes
-  ) with Logging{
+  ) with Logging {
 
   implicit val instantFormat: Format[Instant] = MongoJavatimeFormats.instantFormat
 

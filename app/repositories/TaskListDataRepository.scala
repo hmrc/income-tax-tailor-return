@@ -31,7 +31,6 @@ import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 import uk.gov.hmrc.mongo.play.json.formats.MongoJavatimeFormats
 
 import java.time.{Clock, Instant}
-import java.util.concurrent.TimeUnit
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -45,19 +44,7 @@ class TaskListDataRepository @Inject()(
     collectionName = "taskListData",
     mongoComponent = mongoComponent,
     domainFormat   = TaskListData.encryptedFormat,
-    indexes        = Seq(
-      IndexModel(
-        Indexes.compoundIndex(Indexes.ascending("mtdItId", "taxYear")),
-        IndexOptions()
-          .name("mtdItId-taxYear-index")
-      ),
-      IndexModel(
-        Indexes.ascending("lastUpdated"),
-        IndexOptions()
-          .name("last-updated-index")
-          .expireAfter(appConfig.taskListDataTTL, TimeUnit.DAYS)
-      )
-    ),
+    indexes = RepositoryIndexes.indexes()(appConfig),
     replaceIndexes = appConfig.replaceIndexes
   ) with Logging {
 
