@@ -18,7 +18,7 @@ package repositories
 
 import config.AppConfig
 import models.Done
-import models.mongo.UserData
+import models.mongo.TaskListData
 import org.mongodb.scala.bson.conversions.Bson
 import org.mongodb.scala.model.Filters.{and, equal}
 import org.mongodb.scala.model._
@@ -35,15 +35,15 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class UserDataRepository @Inject()(
-                                    mongoComponent: MongoComponent,
-                                    appConfig: AppConfig,
-                                    clock: Clock
-                                  )(implicit ec: ExecutionContext, crypto: Encrypter with Decrypter)
-  extends PlayMongoRepository[UserData](
-    collectionName = "userData",
+class TaskListDataRepository @Inject()(
+  mongoComponent: MongoComponent,
+  appConfig: AppConfig,
+  clock: Clock
+)(implicit ec: ExecutionContext, crypto: Encrypter with Decrypter)
+  extends PlayMongoRepository[TaskListData](
+    collectionName = "taskListData",
     mongoComponent = mongoComponent,
-    domainFormat   = UserData.encryptedFormat,
+    domainFormat   = TaskListData.encryptedFormat,
     indexes = RepositoryIndexes.indexes()(appConfig),
     replaceIndexes = appConfig.replaceIndexes
   ) with Logging {
@@ -64,7 +64,7 @@ class UserDataRepository @Inject()(
       .toFuture()
       .map(_ => Done)
 
-  def get(mtdItId: String, taxYear: Int): Future[Option[UserData]] = {
+  def get(mtdItId: String, taxYear: Int): Future[Option[TaskListData]] = {
     keepAlive(mtdItId, taxYear).flatMap {
       _ =>
         collection
@@ -73,14 +73,13 @@ class UserDataRepository @Inject()(
     }
   }
 
-  def set(userData: UserData): Future[Done] = {
-
-    val updatedUserData = userData copy (lastUpdated = Instant.now(clock))
+  def set(taskListData: TaskListData): Future[Done] = {
+    val updatedTaskListData = taskListData copy (lastUpdated = Instant.now(clock))
 
     collection
       .replaceOne(
-        filter = filterByMtdItIdYear(updatedUserData.mtdItId, updatedUserData.taxYear),
-        replacement = updatedUserData,
+        filter = filterByMtdItIdYear(updatedTaskListData.mtdItId, updatedTaskListData.taxYear),
+        replacement = updatedTaskListData,
         options = ReplaceOptions().upsert(true)
       )
       .toFuture()
@@ -93,4 +92,3 @@ class UserDataRepository @Inject()(
       .toFuture()
       .map(_ => Done)
 }
-

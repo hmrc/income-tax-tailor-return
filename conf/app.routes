@@ -1,8 +1,11 @@
 # microservice specific routes
 
+GET		/data/:taxYear                                    controllers.UserDataController.get(taxYear: TaxYear)
+POST	/data                                             controllers.UserDataController.set
+DELETE	/data/:taxYear                                    controllers.UserDataController.clear(taxYear: TaxYear)
+POST    /keep-alive/:taxYear                              controllers.UserDataController.keepAlive(taxYear: TaxYear)
 
-GET		/data/:taxYear                                                 controllers.UserDataController.get(taxYear: TaxYear)
-POST	/data                                                          controllers.UserDataController.set
-DELETE	/data/:taxYear                                                 controllers.UserDataController.clear(taxYear: TaxYear)
-POST    /keep-alive/:taxYear                                           controllers.UserDataController.keepAlive(taxYear: TaxYear)
-
+GET		/task-list/data/:taxYear                          controllers.TaskListDataController.get(taxYear: TaxYear)
+POST	/task-list/data                                   controllers.TaskListDataController.set
+DELETE	/task-list/data/:taxYear                          controllers.TaskListDataController.clear(taxYear: TaxYear)
+POST    /task-list/keep-alive/:taxYear                    controllers.TaskListDataController.keepAlive(taxYear: TaxYear)
