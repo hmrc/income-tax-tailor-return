@@ -40,7 +40,7 @@ class TaskListDataController @Inject()(
       repository
         .get(request.mtditid, taxYear.taxYear)
         .map {
-          case Some(value) => Ok(Json.toJson(value))
+          case Some(value) => Ok(Json.toJson(value.data))
           case None =>
             logger.warn("[TaskListDataController.get] No existing data returning Not Found")
             NotFound
