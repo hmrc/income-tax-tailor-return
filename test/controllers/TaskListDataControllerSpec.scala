@@ -87,7 +87,7 @@ class TaskListDataControllerSpec
         val result = route(app, request).value
 
         status(result) shouldBe OK
-        contentAsJson(result) shouldBe Json.toJson(taskListData)
+        contentAsJson(result) shouldBe Json.toJson(taskListData.data)
     }
 
     "return NOT_FOUND when Task List data cannot be found for this mtditid and taxYear" in {
