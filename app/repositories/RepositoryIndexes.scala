@@ -32,7 +32,7 @@ object RepositoryIndexes {
 
   def indexes()(implicit appConfig: AppConfig): Seq[IndexModel] = Seq(
     IndexModel(lookUpIndex, IndexOptions().name("mtdItId-taxYear-index")),
-    IndexModel(ascending("lastUpdated"), IndexOptions().expireAfter(appConfig.mongoTTL, TimeUnit.MINUTES).name("last-updated-index"))
+    IndexModel(ascending("lastUpdated"), IndexOptions().expireAfter(appConfig.mongoTTL, TimeUnit.DAYS).name("last-updated-index"))
   )
 
 }
