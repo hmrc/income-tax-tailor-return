@@ -17,6 +17,8 @@
 package controllers.predicates
 
 import com.google.inject.Inject
+import org.mockito.Mockito
+import org.mockito.Mockito.when
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.inject.guice.GuiceApplicationBuilder
@@ -27,10 +29,12 @@ import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.auth.core.retrieve.{Retrieval, ~}
 import uk.gov.hmrc.http.HeaderCarrier
-
+import play.api.inject.bind
+import org.mockito.ArgumentMatchers.{any, eq => mEq}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Try
+import uk.gov.hmrc.auth.core.{Enrolment => HMRCEnrolment}
 
 class AuthorisedActionSpec extends AnyWordSpec with Matchers {
 
@@ -40,13 +44,12 @@ class AuthorisedActionSpec extends AnyWordSpec with Matchers {
   
   val mtdEnrollmentKey = "HMRC-MTD-IT"
   val mtdEnrollmentIdentifier = "MTDITID"
+  private val mockAuthConnector: AuthConnector = Mockito.mock(classOf[AuthConnector])
+  private type RetrievalType = Option[AffinityGroup] ~ Enrolments
 
   "Auth Action" should {
-
     val app = new GuiceApplicationBuilder().build()
     val bodyParsers = app.injector.instanceOf[BodyParsers.Default]
-
-
     "succeed with a identifier Request" when {
 
       "the user is authorised as an individual" in {
@@ -70,21 +73,32 @@ class AuthorisedActionSpec extends AnyWordSpec with Matchers {
         }
       }
       "the user is authorised as an agent" in {
+        val app = new GuiceApplicationBuilder().overrides(bind[AuthConnector].toInstance(mockAuthConnector)).build()
+
+        val bodyParsers = app.injector.instanceOf[BodyParsers.Default]
+
+        def predicate(mtdId: String): Predicate = mEq(
+          HMRCEnrolment("HMRC-MTD-IT")
+            .withIdentifier("MTDITID", mtdId)
+            .withDelegatedAuthRule("mtd-it-auth"))
 
         running(app) {
 
           val enrolments: Enrolments = Enrolments(Set(
-            Enrolment(mtdEnrollmentKey, Seq(EnrolmentIdentifier(mtdEnrollmentIdentifier, "7777777777")), "Activated"),
-            Enrolment(mtdEnrollmentKey, Seq(EnrolmentIdentifier(mtdEnrollmentIdentifier, "8888888888")), "Activated"),
-            Enrolment(mtdEnrollmentKey, Seq(EnrolmentIdentifier(mtdEnrollmentIdentifier, "1234567890")), "Activated")
-          ) + Enrolment(models.Enrolment.Agent.key, Seq(EnrolmentIdentifier(models.Enrolment.Agent.value, "XARN1234567")), "Activated"))
+            Enrolment(models.Enrolment.Agent.key, Seq(EnrolmentIdentifier(models.Enrolment.Agent.value, "XARN1234567")), "Activated")
+          ))
 
-          val AuthResponse: Some[AffinityGroup] ~ Enrolments =
-            new ~(
-              Some(AffinityGroup.Agent),
-              enrolments)
+          val authResponse = Future.successful(
+            new ~(Some(AffinityGroup.Agent), enrolments)
+          )
 
-          val authAction = new AuthorisedAction(new FakeSuccessfulAuthConnector(AuthResponse), bodyParsers)
+          when(mockAuthConnector.authorise(any(), any[Retrieval[RetrievalType]])(any(), any()))
+            .thenReturn(authResponse)
+
+          when(mockAuthConnector.authorise(predicate("1234567890"), any[Retrieval[Unit]])(any(), any()))
+            .thenReturn(Future.successful(()))
+
+          val authAction = new AuthorisedAction(mockAuthConnector, bodyParsers)
           val controller = new Harness(authAction)
           val result = controller.onPageLoad()(FakeRequest().withHeaders("mtditid" -> "1234567890"))
 
@@ -203,7 +217,7 @@ class AuthorisedActionSpec extends AnyWordSpec with Matchers {
 
         val bodyParsers = application.injector.instanceOf[BodyParsers.Default]
 
-        val authAction = new EarlyPrivateLaunchAuthorisedAction(new FakeSuccessfulAuthConnector(), bodyParsers)
+        val authAction = new EarlyPrivateLaunchAuthorisedAction(new FakeSuccessfulAuthConnector(()), bodyParsers)
         val controller = new Harness(authAction)
         val result = controller.onPageLoad()(FakeRequest())
 

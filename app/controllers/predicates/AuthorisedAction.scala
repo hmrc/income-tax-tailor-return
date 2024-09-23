@@ -26,6 +26,8 @@ import uk.gov.hmrc.auth.core.retrieve.~
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.http.HeaderCarrierConverter
 import models.Enrolment
+import uk.gov.hmrc.auth.core.authorise.Predicate
+import uk.gov.hmrc.auth.core.{Enrolment => HMRCEnrolment}
 
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
@@ -33,10 +35,10 @@ import scala.concurrent.{ExecutionContext, Future}
 trait IdentifierAction extends ActionBuilder[User, AnyContent] with ActionFunction[Request, User]
 
 class AuthorisedAction @Inject()(
-                                               override val authConnector: AuthConnector,
-                                               val parser: BodyParsers.Default
-                                             )
-                                             (implicit val executionContext: ExecutionContext)
+                                  override val authConnector: AuthConnector,
+                                  val parser: BodyParsers.Default
+                                )
+                                (implicit val executionContext: ExecutionContext)
   extends IdentifierAction with AuthorisedFunctions with Logging {
 
   private val unauthorized: Future[Result] = Future.successful(Unauthorized)
@@ -50,19 +52,17 @@ class AuthorisedAction @Inject()(
     } yield id.value
   }
 
-  private def authorisedForMtdItId(mtditid: String, enrolments: Enrolments): Option[String] = {
-    enrolments.enrolments.find(x => x.identifiers.exists(i => i.value.equals(mtditid)))
-      .flatMap(_.getIdentifier(Enrolment.MtdIncomeTax.value)).map(_.value)
-  }
-
-  private def authorisedAgentForMtdItId(mtditid: String, enrolments: Enrolments): Option[AgentDetails] = {
-    //  todo possible check for "mtd-it-auth" rule
+  private def getARN(enrolments: Enrolments): Option[String] = {
     for {
-      mtdId <- authorisedForMtdItId(mtditid, enrolments)
       agentEnrolment <- enrolments.getEnrolment(Enrolment.Agent.key)
       arn <- agentEnrolment.getIdentifier(Enrolment.Agent.value)
-    } yield AgentDetails(mtdId, arn.value)
+    } yield arn.value
   }
+
+  def predicate(mtdId: String): Predicate =
+    HMRCEnrolment("HMRC-MTD-IT")
+      .withIdentifier("MTDITID", mtdId)
+      .withDelegatedAuthRule("mtd-it-auth")
 
   override def invokeBlock[A](request: Request[A], block: User[A] => Future[Result]): Future[Result] = {
 
@@ -77,8 +77,17 @@ class AuthorisedAction @Inject()(
           case Some(AffinityGroup.Individual) ~ enrolments if authorisedForMtdItId(enrolments).contains(mtdItId) =>
             block(User(mtdItId, None)(request))
           case Some(AffinityGroup.Agent) ~ enrolments =>
-            authorisedAgentForMtdItId(mtdItId, enrolments) match {
-              case Some(AgentDetails(mtdId, arn)) => block(User(mtdId, Some(arn))(request))
+            getARN(enrolments) match {
+              case Some(arn) =>
+                authorised(predicate(mtdItId)) {
+                  block(User(mtdItId, Some(arn))(request))
+
+                  //  block (IdentifierRequest (request, sessionData.mtditid, isAgent = true) )
+                }.recover {
+                  case _ =>
+                    logger.info(s"[AuthorisedAction][async] - You are not authorised as an agent")
+                    Unauthorized
+                }
               case _ =>
                 logger.warn("User did not have MTDID or ARN")
                 unauthorized
@@ -94,10 +103,11 @@ class AuthorisedAction @Inject()(
     )
   }
 }
+
 class EarlyPrivateLaunchAuthorisedAction @Inject()(
-                                               override val authConnector: AuthConnector,
-                                               val parser: BodyParsers.Default
-                                             )
+                                                    override val authConnector: AuthConnector,
+                                                    val parser: BodyParsers.Default
+                                                  )
                                                   (implicit val executionContext: ExecutionContext)
   extends IdentifierAction with AuthorisedFunctions with Logging {
   override def invokeBlock[A](request: Request[A], block: User[A] => Future[Result]): Future[Result] = {
