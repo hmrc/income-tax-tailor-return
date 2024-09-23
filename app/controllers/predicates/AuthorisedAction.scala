@@ -81,8 +81,6 @@ class AuthorisedAction @Inject()(
               case Some(arn) =>
                 authorised(predicate(mtdItId)) {
                   block(User(mtdItId, Some(arn))(request))
-
-                  //  block (IdentifierRequest (request, sessionData.mtditid, isAgent = true) )
                 }.recover {
                   case _ =>
                     logger.info(s"[AuthorisedAction][async] - You are not authorised as an agent")

@@ -78,8 +78,8 @@ class AuthorisedActionSpec extends AnyWordSpec with Matchers {
         val bodyParsers = app.injector.instanceOf[BodyParsers.Default]
 
         def predicate(mtdId: String): Predicate = mEq(
-          HMRCEnrolment("HMRC-MTD-IT")
-            .withIdentifier("MTDITID", mtdId)
+          HMRCEnrolment(mtdEnrollmentKey)
+            .withIdentifier(mtdEnrollmentIdentifier, mtdId)
             .withDelegatedAuthRule("mtd-it-auth"))
 
         running(app) {
