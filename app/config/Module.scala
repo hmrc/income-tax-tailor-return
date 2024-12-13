@@ -28,7 +28,7 @@ class Module extends play.api.inject.Module {
 
   override def bindings(environment: Environment, configuration: Configuration): collection.Seq[Binding[_]]  = {
     val authBinding: Binding[_] =
-      if (configuration.get[Boolean]("features.earlyPrivateLaunch")) {
+      if (configuration.get[Boolean]("feature-switch.earlyPrivateLaunch")) {
             bind[IdentifierAction].to[EarlyPrivateLaunchAuthorisedAction].eagerly()
       } else {
           bind[IdentifierAction].to[AuthorisedAction].eagerly()
