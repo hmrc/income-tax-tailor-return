@@ -210,7 +210,7 @@ class AuthorisedActionSpec extends AnyWordSpec with Matchers {
     "succeed with a identifier Request" in {
 
       val application = new GuiceApplicationBuilder()
-        .configure(Map("features.earlyPrivateLaunch" -> "true"))
+        .configure(Map("feature-switch.earlyPrivateLaunch" -> "true"))
         .build()
 
       running(application) {
