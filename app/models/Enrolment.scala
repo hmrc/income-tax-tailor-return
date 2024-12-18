@@ -19,7 +19,12 @@ package models
 abstract class Enrolment(val key: String, val value: String)
 
 object Enrolment {
-  case object MtdIncomeTax extends Enrolment(key = "HMRC-MTD-IT", value = "MTDITID")
-
+  case object Individual extends Enrolment(key = "HMRC-MTD-IT", value = "MTDITID")
   case object Agent extends Enrolment(key = "HMRC-AS-AGENT", value = "AgentReferenceNumber")
+  case object SupportingAgent extends Enrolment(key = "HMRC-MTD-IT-SUPP", value = "MTDITID")
+}
+
+object DelegatedAuthRules {
+  val agentDelegatedAuthRule = "mtd-it-auth"
+  val supportingAgentDelegatedAuthRule = "mtd-it-auth-supp"
 }

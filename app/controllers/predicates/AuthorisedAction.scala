@@ -16,18 +16,17 @@
 
 package controllers.predicates
 
-import models.User
+import config.AppConfig
+import models.{DelegatedAuthRules, User, Enrolment => EnrolmentKey}
 import play.api.Logging
 import play.api.mvc.Results.Unauthorized
 import play.api.mvc._
-import uk.gov.hmrc.auth.core._
+import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals.{affinityGroup, allEnrolments}
 import uk.gov.hmrc.auth.core.retrieve.~
+import uk.gov.hmrc.auth.core.{Enrolment => HMRCEnrolment, _}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.http.HeaderCarrierConverter
-import models.Enrolment
-import uk.gov.hmrc.auth.core.authorise.Predicate
-import uk.gov.hmrc.auth.core.{Enrolment => HMRCEnrolment}
 
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
@@ -36,39 +35,41 @@ trait IdentifierAction extends ActionBuilder[User, AnyContent] with ActionFuncti
 
 class AuthorisedAction @Inject()(
                                   override val authConnector: AuthConnector,
-                                  val parser: BodyParsers.Default
+                                  val parser: BodyParsers.Default,
+                                  appConfig: AppConfig
                                 )
                                 (implicit val executionContext: ExecutionContext)
   extends IdentifierAction with AuthorisedFunctions with Logging {
 
   private val unauthorized: Future[Result] = Future.successful(Unauthorized)
 
-  private case class AgentDetails(mtdId: String, arn: String)
-
-  private def authorisedForMtdItId(enrolments: Enrolments): Option[String] = {
+  private def authorisedForMtdItId(enrolments: Enrolments): Option[String] =
     for {
-      enrolment <- enrolments.getEnrolment(Enrolment.MtdIncomeTax.key)
-      id <- enrolment.getIdentifier(Enrolment.MtdIncomeTax.value)
+      enrolment <- enrolments.getEnrolment(EnrolmentKey.Individual.key)
+      id <- enrolment.getIdentifier(EnrolmentKey.Individual.value)
     } yield id.value
-  }
 
-  private def getARN(enrolments: Enrolments): Option[String] = {
+  private def getARN(enrolments: Enrolments): Option[String] =
     for {
-      agentEnrolment <- enrolments.getEnrolment(Enrolment.Agent.key)
-      arn <- agentEnrolment.getIdentifier(Enrolment.Agent.value)
+      agentEnrolment <- enrolments.getEnrolment(EnrolmentKey.Agent.key)
+      arn <- agentEnrolment.getIdentifier(EnrolmentKey.Agent.value)
     } yield arn.value
-  }
 
-  def predicate(mtdId: String): Predicate =
-    HMRCEnrolment("HMRC-MTD-IT")
-      .withIdentifier("MTDITID", mtdId)
-      .withDelegatedAuthRule("mtd-it-auth")
+  private def predicate(mtdId: String): Predicate =
+    HMRCEnrolment(EnrolmentKey.Individual.key)
+      .withIdentifier(EnrolmentKey.Individual.value, mtdId)
+      .withDelegatedAuthRule(DelegatedAuthRules.agentDelegatedAuthRule)
+
+  private def secondaryAgentPredicate(mtdId: String): Predicate =
+    HMRCEnrolment(EnrolmentKey.SupportingAgent.key)
+      .withIdentifier(EnrolmentKey.SupportingAgent.value, mtdId)
+      .withDelegatedAuthRule(DelegatedAuthRules.supportingAgentDelegatedAuthRule)
 
   override def invokeBlock[A](request: Request[A], block: User[A] => Future[Result]): Future[Result] = {
 
     implicit lazy val headerCarrier: HeaderCarrier = HeaderCarrierConverter.fromRequest(request)
 
-    request.headers.get(Enrolment.MtdIncomeTax.value).fold {
+    request.headers.get(EnrolmentKey.Individual.value).fold {
       logger.warn("[AuthorisedAction][async] - No MTDITID in the header. Returning unauthorised.")
       unauthorized
     }(
@@ -81,24 +82,35 @@ class AuthorisedAction @Inject()(
               case Some(arn) =>
                 authorised(predicate(mtdItId)) {
                   block(User(mtdItId, Some(arn))(request))
-                }.recover {
-                  case _ =>
-                    logger.info(s"[AuthorisedAction][async] - You are not authorised as an agent")
-                    Unauthorized
-                }
+                }.recoverWith(agentRecovery(block, mtdItId, arn)(request, headerCarrier))
               case _ =>
-                logger.warn("User did not have MTDID or ARN")
+                logger.warn("[AuthorisedAction][async] - User did not have MTDID or ARN")
                 unauthorized
             }
           case _ =>
-            logger.info(s"[AuthorisedAction][async] - User failed to authenticate")
+            logger.info("[AuthorisedAction][async] - User failed to authenticate")
             unauthorized
         }.recover {
           case _ =>
-            logger.info(s"[AuthorisedAction][async] - User failed to authenticate")
+            logger.info("[AuthorisedAction][async] - User failed to authenticate")
             Unauthorized
         }
     )
+  }
+
+  private def agentRecovery[A](block: User[A] => Future[Result],
+                               mtdItId: String,
+                               arn: String)(implicit request: Request[A], hc: HeaderCarrier): PartialFunction[Throwable, Future[Result]] = {
+    case _: AuthorisationException if appConfig.emaSupportingAgentsEnabled =>
+      authorised(secondaryAgentPredicate(mtdItId)) {
+        block(User(mtdItId, Some(arn), isSecondaryAgent = true))
+      } recoverWith { case _ =>
+        logger.info(s"[AuthorisedAction][agentRecovery] - Agent does not have secondary delegated authority for Client.")
+        unauthorized
+      }
+    case _ =>
+      logger.info(s"[AuthorisedAction][agentRecovery] - Agent does not have delegated authority for Client.")
+      unauthorized
   }
 }
 
