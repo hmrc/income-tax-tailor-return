@@ -17,8 +17,8 @@
 package config
 
 import controllers.predicates.{AuthorisedAction, EarlyPrivateLaunchAuthorisedAction, IdentifierAction}
-import play.api.{Configuration, Environment}
 import play.api.inject.Binding
+import play.api.{Configuration, Environment}
 import uk.gov.hmrc.crypto.{Decrypter, Encrypter}
 
 import java.time.Clock
@@ -35,7 +35,7 @@ class Module extends play.api.inject.Module {
       }
 
     Seq(
-      bind[AppConfig].toSelf.eagerly(),
+      bind[AppConfig].to[AppConfigImpl].eagerly(),
       bind[Clock].toInstance(Clock.systemUTC()),
       bind[Encrypter with Decrypter].toProvider[CryptoProvider],
       authBinding

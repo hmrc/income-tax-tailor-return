@@ -16,14 +16,25 @@
 
 package config
 
+import com.google.inject.ImplementedBy
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.duration.Duration
 
-@Singleton
-class AppConfig @Inject()(config: ServicesConfig) {
-  def mongoTTL: Long = Duration(config.getString("mongodb.timeToLive")).toDays.toInt
+@ImplementedBy(classOf[AppConfigImpl])
+trait AppConfig {
+  def mongoTTL: Long
+  def replaceIndexes: Boolean
+  def emaSupportingAgentsEnabled: Boolean
+}
 
-  val replaceIndexes: Boolean = config.getBoolean("feature-switch.replaceIndexes")
+@Singleton
+class AppConfigImpl @Inject()(config: ServicesConfig) extends AppConfig {
+  override lazy val mongoTTL: Long = Duration(config.getString("mongodb.timeToLive")).toDays.toInt
+
+  override lazy val replaceIndexes: Boolean = config.getBoolean("feature-switch.replaceIndexes")
+
+  override def emaSupportingAgentsEnabled: Boolean =
+    config.getBoolean("feature-switch.ema-supporting-agents-enabled")
 }

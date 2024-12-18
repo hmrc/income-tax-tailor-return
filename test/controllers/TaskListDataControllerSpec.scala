@@ -48,8 +48,8 @@ class TaskListDataControllerSpec
     with BeforeAndAfterEach {
 
   private val enrolments: Enrolments = Enrolments(Set(
-    Enrolment(models.Enrolment.MtdIncomeTax.key,
-      Seq(EnrolmentIdentifier(models.Enrolment.MtdIncomeTax.value, "1234567890")), "Activated")
+    Enrolment(models.Enrolment.Individual.key,
+      Seq(EnrolmentIdentifier(models.Enrolment.Individual.value, "1234567890")), "Activated")
   ))
 
   private val authResponse: Some[AffinityGroup] ~ Enrolments =
