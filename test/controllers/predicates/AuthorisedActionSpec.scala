@@ -304,6 +304,20 @@ class AuthorisedActionSpec extends AnyWordSpec with Matchers with MockitoSugar {
           status(result) shouldBe UNAUTHORIZED
         }
       }
+
+      "return ISE" in {
+        running(app) {
+          val authAction = new AuthorisedAction(
+            new FakeFailingAuthConnector(new MissingBearerToken),
+            bodyParsers,
+            mockAppConfig
+          )
+          val controller = new Harness(authAction)
+          val result = controller.onPageLoad()(FakeRequest().withHeaders("mtditid" -> "1234567890"))
+
+          status(result) shouldBe INTERNAL_SERVER_ERROR
+        }
+      }
     }
   }
   "Auth Action [EarlyPrivateLaunchAuthorisedAction]" should {

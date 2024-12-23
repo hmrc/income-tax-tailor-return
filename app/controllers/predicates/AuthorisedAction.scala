@@ -19,7 +19,7 @@ package controllers.predicates
 import config.AppConfig
 import models.{DelegatedAuthRules, User, Enrolment => EnrolmentKey}
 import play.api.Logging
-import play.api.mvc.Results.Unauthorized
+import play.api.mvc.Results.{InternalServerError, Unauthorized}
 import play.api.mvc._
 import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals.{affinityGroup, allEnrolments}
@@ -94,6 +94,9 @@ class AuthorisedAction @Inject()(
           case _ =>
             logger.info("[AuthorisedAction][async] - User failed to authenticate")
             Unauthorized
+          case e =>
+            logger.error(s"[AuthorisedAction][async] - Unexpected exception of type '${e.getClass.getSimpleName}' was caught.")
+            InternalServerError
         }
     )
   }
@@ -103,14 +106,23 @@ class AuthorisedAction @Inject()(
                                arn: String)(implicit request: Request[A], hc: HeaderCarrier): PartialFunction[Throwable, Future[Result]] = {
     case _: AuthorisationException if appConfig.emaSupportingAgentsEnabled =>
       authorised(secondaryAgentPredicate(mtdItId)) {
+        logger.error("some error " + User(mtdItId, Some(arn), isSecondaryAgent = true))
         block(User(mtdItId, Some(arn), isSecondaryAgent = true))
-      } recoverWith { case _ =>
-        logger.info(s"[AuthorisedAction][agentRecovery] - Agent does not have secondary delegated authority for Client.")
-        unauthorized
+
+      } recoverWith {
+        case _: AuthorisationException =>
+          logger.warn(s"[AuthorisedAction][agentRecovery] - Agent does not have delegated primary or secondary authority for Client.")
+          Future(Unauthorized)
+        case e =>
+          logger.error(s"[AuthorisedAction][agentRecovery] - Unexpected exception of type '${e.getClass.getSimpleName}' was caught.")
+          Future(InternalServerError)
       }
-    case _ =>
-      logger.info(s"[AuthorisedAction][agentRecovery] - Agent does not have delegated authority for Client.")
+    case _: AuthorisationException =>
+      logger.warn(s"[AuthorisedAction][agentRecovery] - Agent does not have delegated authority for Client.")
       unauthorized
+    case e =>
+      logger.error(s"[AuthorisedAction][agentRecovery] - Unexpected exception of type '${e.getClass.getSimpleName}' was caught.")
+      Future(InternalServerError)
   }
 }
 
