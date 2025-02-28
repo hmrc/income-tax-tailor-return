@@ -82,7 +82,7 @@ class AuthorisedAction @Inject()(
               case Some(arn) =>
                 authorised(predicate(mtdItId)) {
                   block(User(mtdItId, Some(arn))(request))
-                }.recoverWith(agentRecovery(block, mtdItId, arn)(request, headerCarrier))
+                }
               case _ =>
                 logger.warn("[AuthorisedAction][async] - User did not have MTDID or ARN")
                 unauthorized

@@ -42,7 +42,7 @@ class AuthorisedActionSpec extends AnyWordSpec with Matchers with MockitoSugar {
   class Harness(authAction: IdentifierAction) {
     def onPageLoad(): Action[AnyContent] = authAction { _ => Results.Ok }
   }
-  
+
   val mtdEnrollmentKey = "HMRC-MTD-IT"
   val mtdEnrollmentIdentifier = "MTDITID"
 
@@ -116,7 +116,7 @@ class AuthorisedActionSpec extends AnyWordSpec with Matchers with MockitoSugar {
           status(result) shouldBe OK
         }
       }
-      "the user is authorised as a secondary agent (EMA Supporting Agents enabled)" in {
+      "the user is NOT authorised as a secondary agent (EMA Supporting Agents enabled)" in {
         val app = new GuiceApplicationBuilder().overrides(bind[AuthConnector].toInstance(mockAuthConnector)).build()
 
         running(app) {
@@ -144,7 +144,7 @@ class AuthorisedActionSpec extends AnyWordSpec with Matchers with MockitoSugar {
           val controller = new Harness(authAction)
           val result = controller.onPageLoad()(FakeRequest().withHeaders("mtditid" -> "1234567890"))
 
-          status(result) shouldBe OK
+          status(result) shouldBe UNAUTHORIZED
         }
       }
     }
