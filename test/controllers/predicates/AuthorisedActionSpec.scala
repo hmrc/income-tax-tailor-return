@@ -44,21 +44,13 @@ class AuthorisedActionSpec extends AnyWordSpec with Matchers with MockitoSugar {
 
   val mtdEnrollmentKey = "HMRC-MTD-IT"
   val mtdEnrollmentIdentifier = "MTDITID"
-
   private val mockAuthConnector: AuthConnector = mock[AuthConnector]
-
   private type RetrievalType = Option[AffinityGroup] ~ Enrolments
 
   private def predicate(mtdId: String): Predicate = mEq(
     HMRCEnrolment(EnrolmentKeys.Individual.key)
       .withIdentifier(EnrolmentKeys.Individual.value, mtdId)
       .withDelegatedAuthRule(DelegatedAuthRules.agentDelegatedAuthRule)
-  )
-
-  def supportingAgentPredicate(mtdId: String): Predicate = mEq(
-    HMRCEnrolment(EnrolmentKeys.SupportingAgent.key)
-      .withIdentifier(EnrolmentKeys.SupportingAgent.value, mtdId)
-      .withDelegatedAuthRule(DelegatedAuthRules.supportingAgentDelegatedAuthRule)
   )
 
   "Auth Action" should {
@@ -132,9 +124,6 @@ class AuthorisedActionSpec extends AnyWordSpec with Matchers with MockitoSugar {
 
           when(mockAuthConnector.authorise(predicate("1234567890"), any[Retrieval[Unit]])(any(), any()))
             .thenReturn(Future.failed(InsufficientEnrolments()))
-
-          when(mockAuthConnector.authorise(supportingAgentPredicate("1234567890"), any[Retrieval[Unit]])(any(), any()))
-            .thenReturn(Future.successful(()))
 
           val authAction = new AuthorisedAction(mockAuthConnector, bodyParsers)
           val controller = new Harness(authAction)
