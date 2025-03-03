@@ -16,13 +16,15 @@
 
 package controllers.predicates
 
-import config.AppConfig
 import models.{DelegatedAuthRules, User, Enrolment => EnrolmentKey}
 import play.api.Logging
 import play.api.mvc.Results.Unauthorized
 import play.api.mvc._
 import uk.gov.hmrc.auth.core.authorise.Predicate
-import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals.{affinityGroup, allEnrolments}
+import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals.{
+  affinityGroup,
+  allEnrolments
+}
 import uk.gov.hmrc.auth.core.retrieve.~
 import uk.gov.hmrc.auth.core.{Enrolment => HMRCEnrolment, _}
 import uk.gov.hmrc.http.HeaderCarrier
@@ -35,8 +37,7 @@ trait IdentifierAction extends ActionBuilder[User, AnyContent] with ActionFuncti
 
 class AuthorisedAction @Inject()(
                                   override val authConnector: AuthConnector,
-                                  val parser: BodyParsers.Default,
-                                  appConfig: AppConfig
+                                  val parser: BodyParsers.Default
                                 )
                                 (implicit val executionContext: ExecutionContext)
   extends IdentifierAction with AuthorisedFunctions with Logging {
@@ -59,11 +60,6 @@ class AuthorisedAction @Inject()(
     HMRCEnrolment(EnrolmentKey.Individual.key)
       .withIdentifier(EnrolmentKey.Individual.value, mtdId)
       .withDelegatedAuthRule(DelegatedAuthRules.agentDelegatedAuthRule)
-
-  private def secondaryAgentPredicate(mtdId: String): Predicate =
-    HMRCEnrolment(EnrolmentKey.SupportingAgent.key)
-      .withIdentifier(EnrolmentKey.SupportingAgent.value, mtdId)
-      .withDelegatedAuthRule(DelegatedAuthRules.supportingAgentDelegatedAuthRule)
 
   override def invokeBlock[A](request: Request[A], block: User[A] => Future[Result]): Future[Result] = {
 
@@ -96,21 +92,6 @@ class AuthorisedAction @Inject()(
             Unauthorized
         }
     )
-  }
-
-  private def agentRecovery[A](block: User[A] => Future[Result],
-                               mtdItId: String,
-                               arn: String)(implicit request: Request[A], hc: HeaderCarrier): PartialFunction[Throwable, Future[Result]] = {
-    case _: AuthorisationException if appConfig.emaSupportingAgentsEnabled =>
-      authorised(secondaryAgentPredicate(mtdItId)) {
-        block(User(mtdItId, Some(arn), isSecondaryAgent = true))
-      } recoverWith { case _ =>
-        logger.info(s"[AuthorisedAction][agentRecovery] - Agent does not have secondary delegated authority for Client.")
-        unauthorized
-      }
-    case _ =>
-      logger.info(s"[AuthorisedAction][agentRecovery] - Agent does not have delegated authority for Client.")
-      unauthorized
   }
 }
 

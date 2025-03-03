@@ -26,7 +26,6 @@ import scala.concurrent.duration.Duration
 trait AppConfig {
   def mongoTTL: Long
   def replaceIndexes: Boolean
-  def emaSupportingAgentsEnabled: Boolean
 }
 
 @Singleton
@@ -35,6 +34,4 @@ class AppConfigImpl @Inject()(config: ServicesConfig) extends AppConfig {
 
   override lazy val replaceIndexes: Boolean = config.getBoolean("feature-switch.replaceIndexes")
 
-  override def emaSupportingAgentsEnabled: Boolean =
-    config.getBoolean("feature-switch.ema-supporting-agents-enabled")
 }
