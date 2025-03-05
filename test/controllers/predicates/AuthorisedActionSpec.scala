@@ -17,7 +17,6 @@
 package controllers.predicates
 
 import com.google.inject.Inject
-import config.AppConfig
 import models.{DelegatedAuthRules, Enrolment => EnrolmentKeys}
 import org.mockito.ArgumentMatchers.{any, eq => mEq}
 import org.mockito.MockitoSugar
@@ -42,25 +41,16 @@ class AuthorisedActionSpec extends AnyWordSpec with Matchers with MockitoSugar {
   class Harness(authAction: IdentifierAction) {
     def onPageLoad(): Action[AnyContent] = authAction { _ => Results.Ok }
   }
-  
+
   val mtdEnrollmentKey = "HMRC-MTD-IT"
   val mtdEnrollmentIdentifier = "MTDITID"
-
   private val mockAuthConnector: AuthConnector = mock[AuthConnector]
-  private val mockAppConfig: AppConfig = mock[AppConfig]
-
   private type RetrievalType = Option[AffinityGroup] ~ Enrolments
 
   private def predicate(mtdId: String): Predicate = mEq(
     HMRCEnrolment(EnrolmentKeys.Individual.key)
       .withIdentifier(EnrolmentKeys.Individual.value, mtdId)
       .withDelegatedAuthRule(DelegatedAuthRules.agentDelegatedAuthRule)
-  )
-
-  def supportingAgentPredicate(mtdId: String): Predicate = mEq(
-    HMRCEnrolment(EnrolmentKeys.SupportingAgent.key)
-      .withIdentifier(EnrolmentKeys.SupportingAgent.value, mtdId)
-      .withDelegatedAuthRule(DelegatedAuthRules.supportingAgentDelegatedAuthRule)
   )
 
   "Auth Action" should {
@@ -83,7 +73,7 @@ class AuthorisedActionSpec extends AnyWordSpec with Matchers with MockitoSugar {
               Some(AffinityGroup.Individual),
               enrolments)
 
-          val authAction = new AuthorisedAction(new FakeSuccessfulAuthConnector(AuthResponse), bodyParsers, mockAppConfig)
+          val authAction = new AuthorisedAction(new FakeSuccessfulAuthConnector(AuthResponse), bodyParsers)
           val controller = new Harness(authAction)
           val result = controller.onPageLoad()(FakeRequest().withHeaders("mtditid" -> "1234567890"))
 
@@ -109,14 +99,14 @@ class AuthorisedActionSpec extends AnyWordSpec with Matchers with MockitoSugar {
           when(mockAuthConnector.authorise(predicate("1234567890"), any[Retrieval[Unit]])(any(), any()))
             .thenReturn(Future.successful(()))
 
-          val authAction = new AuthorisedAction(mockAuthConnector, bodyParsers, mockAppConfig)
+          val authAction = new AuthorisedAction(mockAuthConnector, bodyParsers)
           val controller = new Harness(authAction)
           val result = controller.onPageLoad()(FakeRequest().withHeaders("mtditid" -> "1234567890"))
 
           status(result) shouldBe OK
         }
       }
-      "the user is authorised as a secondary agent (EMA Supporting Agents enabled)" in {
+      "the user is NOT authorised as a secondary agent (EMA Supporting Agents enabled)" in {
         val app = new GuiceApplicationBuilder().overrides(bind[AuthConnector].toInstance(mockAuthConnector)).build()
 
         running(app) {
@@ -135,16 +125,11 @@ class AuthorisedActionSpec extends AnyWordSpec with Matchers with MockitoSugar {
           when(mockAuthConnector.authorise(predicate("1234567890"), any[Retrieval[Unit]])(any(), any()))
             .thenReturn(Future.failed(InsufficientEnrolments()))
 
-          when(mockAppConfig.emaSupportingAgentsEnabled).thenReturn(true)
-
-          when(mockAuthConnector.authorise(supportingAgentPredicate("1234567890"), any[Retrieval[Unit]])(any(), any()))
-            .thenReturn(Future.successful(()))
-
-          val authAction = new AuthorisedAction(mockAuthConnector, bodyParsers, mockAppConfig)
+          val authAction = new AuthorisedAction(mockAuthConnector, bodyParsers)
           val controller = new Harness(authAction)
           val result = controller.onPageLoad()(FakeRequest().withHeaders("mtditid" -> "1234567890"))
 
-          status(result) shouldBe OK
+          status(result) shouldBe UNAUTHORIZED
         }
       }
     }
@@ -163,7 +148,7 @@ class AuthorisedActionSpec extends AnyWordSpec with Matchers with MockitoSugar {
               Some(AffinityGroup.Individual),
               enrolments)
 
-          val authAction = new AuthorisedAction(new FakeSuccessfulAuthConnector(AuthResponse), bodyParsers, mockAppConfig)
+          val authAction = new AuthorisedAction(new FakeSuccessfulAuthConnector(AuthResponse), bodyParsers)
           val controller = new Harness(authAction)
           val result = controller.onPageLoad()(FakeRequest())
 
@@ -183,7 +168,7 @@ class AuthorisedActionSpec extends AnyWordSpec with Matchers with MockitoSugar {
               Some(AffinityGroup.Individual),
               enrolments)
 
-          val authAction = new AuthorisedAction(new FakeSuccessfulAuthConnector(AuthResponse), bodyParsers, mockAppConfig)
+          val authAction = new AuthorisedAction(new FakeSuccessfulAuthConnector(AuthResponse), bodyParsers)
           val controller = new Harness(authAction)
           val result = controller.onPageLoad()(FakeRequest().withHeaders("mtditid" -> "we are not the same"))
 
@@ -205,7 +190,7 @@ class AuthorisedActionSpec extends AnyWordSpec with Matchers with MockitoSugar {
               Some(AffinityGroup.Agent),
               enrolments)
 
-          val authAction = new AuthorisedAction(new FakeSuccessfulAuthConnector(AuthResponse), bodyParsers, mockAppConfig)
+          val authAction = new AuthorisedAction(new FakeSuccessfulAuthConnector(AuthResponse), bodyParsers)
           val controller = new Harness(authAction)
           val result = controller.onPageLoad()(FakeRequest().withHeaders("mtditid" -> "1234567890"))
 
@@ -227,7 +212,7 @@ class AuthorisedActionSpec extends AnyWordSpec with Matchers with MockitoSugar {
               Some(AffinityGroup.Agent),
               enrolments)
 
-          val authAction = new AuthorisedAction(new FakeSuccessfulAuthConnector(AuthResponse), bodyParsers, mockAppConfig)
+          val authAction = new AuthorisedAction(new FakeSuccessfulAuthConnector(AuthResponse), bodyParsers)
           val controller = new Harness(authAction)
           val result = controller.onPageLoad()(FakeRequest().withHeaders("mtditid" -> "we do not exist"))
 
@@ -253,12 +238,10 @@ class AuthorisedActionSpec extends AnyWordSpec with Matchers with MockitoSugar {
           when(mockAuthConnector.authorise(predicate("1234567890"), any[Retrieval[Unit]])(any(), any()))
             .thenReturn(Future.failed(InsufficientEnrolments()))
 
-          when(mockAppConfig.emaSupportingAgentsEnabled).thenReturn(true)
-
           when(mockAuthConnector.authorise(predicate("1234567890"), any[Retrieval[Unit]])(any(), any()))
             .thenReturn(Future.failed(InsufficientEnrolments()))
 
-          val authAction = new AuthorisedAction(mockAuthConnector, bodyParsers, mockAppConfig)
+          val authAction = new AuthorisedAction(mockAuthConnector, bodyParsers)
           val controller = new Harness(authAction)
           val result = controller.onPageLoad()(FakeRequest().withHeaders("mtditid" -> "1234567890"))
 
@@ -284,9 +267,7 @@ class AuthorisedActionSpec extends AnyWordSpec with Matchers with MockitoSugar {
           when(mockAuthConnector.authorise(predicate("1234567890"), any[Retrieval[Unit]])(any(), any()))
             .thenReturn(Future.failed(InsufficientEnrolments()))
 
-          when(mockAppConfig.emaSupportingAgentsEnabled).thenReturn(false)
-
-          val authAction = new AuthorisedAction(mockAuthConnector, bodyParsers, mockAppConfig)
+          val authAction = new AuthorisedAction(mockAuthConnector, bodyParsers)
           val controller = new Harness(authAction)
           val result = controller.onPageLoad()(FakeRequest().withHeaders("mtditid" -> "1234567890"))
 
@@ -297,7 +278,7 @@ class AuthorisedActionSpec extends AnyWordSpec with Matchers with MockitoSugar {
 
         running(app) {
 
-          val authAction = new AuthorisedAction(new FakeFailingAuthConnector(new MissingBearerToken), bodyParsers, mockAppConfig)
+          val authAction = new AuthorisedAction(new FakeFailingAuthConnector(new MissingBearerToken), bodyParsers)
           val controller = new Harness(authAction)
           val result = controller.onPageLoad()(FakeRequest().withHeaders("mtditid" -> "1234567890"))
 
