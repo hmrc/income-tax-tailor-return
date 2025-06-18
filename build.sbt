@@ -20,7 +20,7 @@ import uk.gov.hmrc.DefaultBuildSettings
 val appName = "income-tax-tailor-return"
 
 ThisBuild / majorVersion := 0
-ThisBuild / scalaVersion := "2.13.12"
+ThisBuild / scalaVersion := "2.13.16"
 
 lazy val coverageSettings: Seq[Setting[?]] = {
   import scoverage.ScoverageKeys
@@ -81,4 +81,4 @@ lazy val it = project
   .dependsOn(microservice % "test->test") // the "test->test" allows reusing test code and test dependencies
   .settings(testSettings ++ itSettings)
 
-addCommandAlias("runAllChecks", "clean;compile;scalastyle;coverage;test;it/test;coverageReport")
+addCommandAlias("runAllChecks", "clean;compile;coverage;test;it/test;coverageReport;dependencyUpdates")
