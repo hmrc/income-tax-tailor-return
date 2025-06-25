@@ -29,6 +29,7 @@ import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.Codecs.toBson
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 import uk.gov.hmrc.mongo.play.json.formats.MongoJavatimeFormats
+import uk.gov.hmrc.play.http.logging.Mdc
 
 import java.time.{Clock, Instant}
 import javax.inject.{Inject, Singleton}
@@ -36,10 +37,10 @@ import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class TaskListDataRepository @Inject()(
-  mongoComponent: MongoComponent,
-  appConfig: AppConfig,
-  clock: Clock
-)(implicit ec: ExecutionContext, crypto: Encrypter with Decrypter)
+                                        mongoComponent: MongoComponent,
+                                        appConfig: AppConfig,
+                                        clock: Clock
+                                      )(implicit ec: ExecutionContext, crypto: Encrypter with Decrypter)
   extends PlayMongoRepository[TaskListData](
     collectionName = "taskListData",
     mongoComponent = mongoComponent,
@@ -56,39 +57,43 @@ class TaskListDataRepository @Inject()(
   )
 
   def keepAlive(mtdItId: String, taxYear: Int): Future[Done] =
-    collection
-      .updateOne(
-        filter = filterByMtdItIdYear(mtdItId, taxYear),
-        update = Updates.set("lastUpdated", Instant.now(clock))
-      )
-      .toFuture()
-      .map(_ => Done)
-
-  def get(mtdItId: String, taxYear: Int): Future[Option[TaskListData]] = {
-    keepAlive(mtdItId, taxYear).flatMap {
-      _ =>
-        collection
-          .find(filterByMtdItIdYear(mtdItId, taxYear))
-          .headOption()
+    Mdc.preservingMdc {
+      collection
+        .updateOne(
+          filter = filterByMtdItIdYear(mtdItId, taxYear),
+          update = Updates.set("lastUpdated", Instant.now(clock))
+        )
+        .toFuture()
+        .map(_ => Done)
     }
-  }
 
-  def set(taskListData: TaskListData): Future[Done] = {
-    val updatedTaskListData = taskListData copy (lastUpdated = Instant.now(clock))
+  def get(mtdItId: String, taxYear: Int): Future[Option[TaskListData]] =
+    Mdc.preservingMdc {
+      keepAlive(mtdItId, taxYear).flatMap {
+        _ =>
+          collection
+            .find(filterByMtdItIdYear(mtdItId, taxYear))
+            .headOption()
+      }
+    }
 
-    collection
-      .replaceOne(
-        filter = filterByMtdItIdYear(updatedTaskListData.mtdItId, updatedTaskListData.taxYear),
-        replacement = updatedTaskListData,
-        options = ReplaceOptions().upsert(true)
-      )
-      .toFuture()
-      .map(_ => Done)
-  }
+  def set(taskListData: TaskListData): Future[Done] =
+    Mdc.preservingMdc {
+      collection
+        .replaceOne(
+          filter = filterByMtdItIdYear(taskListData.mtdItId, taskListData.taxYear),
+          replacement = taskListData.copy(lastUpdated = Instant.now(clock)),
+          options = ReplaceOptions().upsert(true)
+        )
+        .toFuture()
+        .map(_ => Done)
+    }
 
   def clear(mtdItId: String, taxYear: Int): Future[Done] =
-    collection
-      .deleteOne(filterByMtdItIdYear(mtdItId, taxYear))
-      .toFuture()
-      .map(_ => Done)
+    Mdc.preservingMdc {
+      collection
+        .deleteOne(filterByMtdItIdYear(mtdItId, taxYear))
+        .toFuture()
+        .map(_ => Done)
+    }
 }
