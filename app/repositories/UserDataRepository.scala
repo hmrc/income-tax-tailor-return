@@ -25,11 +25,11 @@ import org.mongodb.scala.model._
 import play.api.Logging
 import play.api.libs.json.Format
 import uk.gov.hmrc.crypto.{Decrypter, Encrypter}
+import uk.gov.hmrc.mdc.Mdc
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.Codecs.toBson
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 import uk.gov.hmrc.mongo.play.json.formats.MongoJavatimeFormats
-import uk.gov.hmrc.play.http.logging.Mdc
 
 import java.time.{Clock, Instant}
 import javax.inject.{Inject, Singleton}
