@@ -56,7 +56,7 @@ class TaskListDataRepositorySpec
   private implicit val crypto: Encrypter with Decrypter =
     SymmetricCryptoFactory.aesGcmCryptoFromConfig("crypto", configuration.underlying)
 
-  protected override val repository = new TaskListDataRepository(
+  protected override val repository: TaskListDataRepository = new TaskListDataRepository(
     mongoComponent = mongoComponent,
     appConfig = appConfig,
     clock = stubClock

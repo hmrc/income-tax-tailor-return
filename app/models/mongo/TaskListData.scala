@@ -40,7 +40,7 @@ object TaskListData {
         (__ \ "taxYear").read[Int].filter(_.toString.matches("^20\\d{2}$")) and
         (__ \ "data").read[JsObject] and
         (__ \ "lastUpdated").read(MongoJavatimeFormats.instantFormat)
-      ) (TaskListData.apply _)
+      ) (TaskListData.apply)
   }
 
   val writes: OWrites[TaskListData] = {
@@ -49,7 +49,7 @@ object TaskListData {
         (__ \ "taxYear").write[Int] and
         (__ \ "data").write[JsObject] and
         (__ \ "lastUpdated").write(MongoJavatimeFormats.instantFormat)
-      ) (unlift(TaskListData.unapply))
+      ) (tld => (tld.mtdItId, tld.taxYear, tld.data, tld.lastUpdated))
   }
 
   implicit val format: OFormat[TaskListData] = OFormat(reads, writes)
