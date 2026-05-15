@@ -56,7 +56,7 @@ class UserDataRepositorySpec
   private implicit val crypto: Encrypter with Decrypter =
     SymmetricCryptoFactory.aesGcmCryptoFromConfig("crypto", configuration.underlying)
 
-  protected override val repository = new UserDataRepository(
+  protected override val repository: UserDataRepository = new UserDataRepository(
     mongoComponent = mongoComponent,
     appConfig = appConfig,
     clock = stubClock

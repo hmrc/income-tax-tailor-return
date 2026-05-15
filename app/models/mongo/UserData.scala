@@ -16,6 +16,7 @@
 
 package models.mongo
 
+import play.api.libs.functional.syntax._
 import play.api.libs.json._
 import uk.gov.hmrc.crypto.Sensitive._
 import uk.gov.hmrc.crypto.json.JsonEncryption
@@ -35,35 +36,26 @@ case class UserData(
   object UserData {
 
     val reads: Reads[UserData] = {
-
-      import play.api.libs.functional.syntax._
-
       (
         (__ \ "mtdItId").read[String] and
           (__ \ "taxYear").read[Int].filter(_.toString.matches("^20\\d{2}$")) and
           (__ \ "data").read[JsObject] and
           (__ \ "lastUpdated").read(MongoJavatimeFormats.instantFormat)
-        ) (UserData.apply _)
+        ) (UserData.apply)
     }
 
     val writes: OWrites[UserData] = {
-
-      import play.api.libs.functional.syntax._
-
       (
         (__ \ "mtdItId").write[String] and
           (__ \ "taxYear").write[Int] and
           (__ \ "data").write[JsObject] and
           (__ \ "lastUpdated").write(MongoJavatimeFormats.instantFormat)
-        ) (unlift(UserData.unapply))
+        ) (ud => (ud.mtdItId, ud.taxYear, ud.data, ud.lastUpdated))
     }
 
     implicit val format: OFormat[UserData] = OFormat(reads, writes)
 
     def encryptedFormat(implicit crypto: Encrypter with Decrypter): OFormat[UserData] = {
-
-      import play.api.libs.functional.syntax._
-
       implicit val sensitiveFormat: Format[SensitiveString] =
         JsonEncryption.sensitiveEncrypterDecrypter(SensitiveString.apply)
 

@@ -20,7 +20,7 @@ import uk.gov.hmrc.DefaultBuildSettings
 val appName = "income-tax-tailor-return"
 
 ThisBuild / majorVersion := 0
-ThisBuild / scalaVersion := "2.13.18"
+ThisBuild / scalaVersion := "3.3.7"
 
 lazy val coverageSettings: Seq[Setting[?]] = {
   import scoverage.ScoverageKeys
@@ -52,8 +52,10 @@ lazy val microservice = Project(appName, file("."))
   .enablePlugins(PlayScala, SbtDistributablesPlugin)
   .settings(
     libraryDependencies ++= AppDependencies(),
-    scalacOptions += "-Wconf:cat=unused-imports&src=html/.*:s",
-    scalacOptions += "-Wconf:src=routes/.*:s"
+    scalacOptions += "-Werror",
+    scalacOptions += "-Wconf:src=html/.*:s",
+    scalacOptions += "-Wconf:src=routes/.*:s",
+    scalacOptions ~= (_.distinct)
   )
   .configs(Test)
   .settings(PlayKeys.playDefaultPort := 9383)
